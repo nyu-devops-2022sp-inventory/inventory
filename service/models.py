@@ -5,6 +5,7 @@ All of the models are stored in this module
 """
 import logging
 from flask_sqlalchemy import SQLAlchemy
+import pandas as pd
 
 logger = logging.getLogger("flask.app")
 
@@ -18,25 +19,41 @@ class DataValidationError(Exception):
     pass
 
 
-class YourResourceModel(db.Model):
+class Product(db.Model):
     """
-    Class that represents a <your resource model name>
+    Class that represents a Product
     """
-
-    app = None
-
+    __tablename__ = "products"
     # Table Schema
+    
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(63))
+    product_name = db.Column(db.String(128), unique=True, nullable=False)
+    quantity = db.Column(db.Integer, default=0)
+    status = db.Column(db.Integer, default=0) 
+    def read_csv(self, file_path):
+        """
+        read data from csv to db table
+        """
+        df = pd.read_csv(file_path)
+        self.id = None
+        for _, row in df.iterrows():
+            db.session.add(Product(product_name = str(row[1]), quantity =int(row[2]), status=int(row[3])))
+            db.session.commit()
+        logger.info("loading data from csv file successfully")
+
 
     def __repr__(self):
-        return "<YourResourceModel %r id=[%s]>" % (self.name, self.id)
+        return "<Product %r id=[%s]>" % (self.product_name, self.id)
+
+    
+        
 
     def create(self):
         """
         Creates a YourResourceModel to the database
         """
-        logger.info("Creating %s", self.name)
+        logger.info("Creating %s with quantity %d", self.product_name, self.quantity)
         self.id = None  # id must be none to generate next primary key
         db.session.add(self)
         db.session.commit()
@@ -45,18 +62,18 @@ class YourResourceModel(db.Model):
         """
         Updates a YourResourceModel to the database
         """
-        logger.info("Saving %s", self.name)
+        logger.info("Saving %s", self.product_name)
         db.session.commit()
 
     def delete(self):
         """ Removes a YourResourceModel from the data store """
-        logger.info("Deleting %s", self.name)
+        logger.info("Deleting %s", self.product_name)
         db.session.delete(self)
         db.session.commit()
 
     def serialize(self):
         """ Serializes a YourResourceModel into a dictionary """
-        return {"id": self.id, "name": self.name}
+        return {"id": self.id, "name": self.product_name}
 
     def deserialize(self, data):
         """
@@ -66,7 +83,7 @@ class YourResourceModel(db.Model):
             data (dict): A dictionary containing the resource data
         """
         try:
-            self.name = data["name"]
+            self.name = data["product_name"]
         except KeyError as error:
             raise DataValidationError(
                 "Invalid YourResourceModel: missing " + error.args[0]
@@ -86,6 +103,13 @@ class YourResourceModel(db.Model):
         db.init_app(app)
         app.app_context().push()
         db.create_all()  # make our sqlalchemy tables
+        # first time init need this
+        # Product.read_csv(app,"./products.csv")
+        q1 = db.session.query(Product).filter(Product.product_name=="apple").first()
+        q2 = db.session.query(Product).filter(Product.id==1).first()
+        print(q1)
+        print(q2)
+        
 
     @classmethod
     def all(cls):
