@@ -3,6 +3,8 @@ Flask==2.0.2
 Flask-SQLAlchemy==2.5.1
 psycopg2-binary==2.9.2
 python-dotenv==0.19.2
+pandas==1.4.1
+numpy==1.22.2
 
 # Runtime
 gunicorn==20.1.0
@@ -21,3 +23,5 @@ httpie==2.3.0
 # Code coverage
 coverage==4.5.4
 codecov==2.1.10
+
+
