@@ -24,11 +24,14 @@ class Product(db.Model):
     Class that represents a Product
     """
     __tablename__ = "products"
+    __table_args__ = (
+        db.UniqueConstraint('product_name', 'status', name='unique_product_status'),
+    )
     # Table Schema
     
 
     id = db.Column(db.Integer, primary_key=True)
-    product_name = db.Column(db.String(128), unique=True, nullable=False)
+    product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
     status = db.Column(db.Integer, default=0) 
     def read_csv(self, file_path):
