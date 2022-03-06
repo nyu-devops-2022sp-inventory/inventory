@@ -41,3 +41,26 @@ def init_db():
     Product.init_db(app)
     print("init database sucessfully")
 
+@app.route('/products', methods=['POST'])
+def create_products():
+    """create a new product"""
+    app.logger.info('Create Product Request')
+    product = Product()
+    product.deserialize(request.get_json)
+    product.create()
+    app.logger.info('Created Product with id: {}'.format(product.id))
+    return make_response(jsonify(product.serialize()),
+                        status.HTTP_201_CREATED,
+                        {'location': url_for('get_products', product_id = product.id, _external=True)})
+
+@app.route('/products/<int:product_id>', methods=['DELETE'])
+def delete_products(product_id):
+    "delete a product"
+    app.logger.info('Request to delete Product with id: {}'.format(product_id))
+    product = Product.find_or_404()
+    if product:
+        product.delete()
+    return make_response('', status.HTTP_204_NO_CONTENT)
+
+
+
