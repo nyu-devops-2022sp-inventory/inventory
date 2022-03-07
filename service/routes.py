@@ -42,7 +42,7 @@ def init_db():
     print("init database sucessfully")
 
 @app.route('/products/<int:product_id>', methods=['PUT'])
-def update_products(product_id):
+def update_product(product_id):
     """ Update the quantity of product """
     app.logger.info('Request to update Product with id: {} by {}'.format(product_id, quantity))
 
