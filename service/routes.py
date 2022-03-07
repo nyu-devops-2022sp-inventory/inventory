@@ -41,3 +41,17 @@ def init_db():
     Product.init_db(app)
     print("init database sucessfully")
 
+@app.route('/products/<int:product_id>', methods=['POST'])
+def update_products(product_id):
+    """ Update the quantity of product """
+    app.logger.info('Request to update Product with id: {} by {}'.format(product_id, quantity))
+
+    product = Product.find(product_id)
+    if not product:
+        return make_response('Product with id {} was not found.'.format(product_id), status.HTTP_404_NOT_FOUND)
+
+    product.quantity += quantity
+    product.save()
+
+    app.logger.info('Product with id {} increases {}.'.format(product_id, quantity))
+    return product.serialize(), status.HTTP_200_OK
