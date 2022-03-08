@@ -4,6 +4,7 @@ My Service
 Describe what your service does here
 """
 
+from math import prod
 import os
 import sys
 import logging
@@ -32,10 +33,10 @@ def index():
             version="1.0",
             list_path=url_for("list_products", _external=True),
             # update_path=url_for("update_product", _external=False),
+
         ),
         status.HTTP_200_OK,
     )
-
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
@@ -47,6 +48,7 @@ def init_db():
     global app
     Product.init_db(app)
     print("init database sucessfully")
+
 
 
 ######################################################################
@@ -61,8 +63,24 @@ def list_products():
     results = [product.serialize() for product in products]
     app.logger.info("Returning %d products", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
-
-
+  
+######################################################################
+# ADD A NEW PRODUCT
+######################################################################
+@app.route('/products', methods=['POST'])
+def create_products():
+    """create a new product"""
+    app.logger.info('Create Product Request')
+    product = Product()
+    product.deserialize(request.json)
+    product.create()
+    app.logger.info('Created Product with id: {}'.format(product.id))
+    return make_response(
+        jsonify(product.serialize()),
+        status.HTTP_201_CREATED,
+        {"product_id": product.id}
+    )
+  
 ######################################################################
 # RETRIEVE A PRODUCT
 ######################################################################
@@ -79,6 +97,17 @@ def get_products(product_id):
     app.logger.info("Returning pet: %s", product.product_name)
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
+######################################################################
+# DELETE A PRODUCT
+######################################################################  
+@app.route('/products/<int:product_id>', methods=['DELETE'])
+def delete_products(product_id):
+    """delete a product"""
+    app.logger.info('Request to delete Product with id: {}'.format(product_id))
+    product = Product.find_or_404(product_id)
+    if product:
+        product.delete()
+    return make_response('', status.HTTP_204_NO_CONTENT)
 
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
