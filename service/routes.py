@@ -10,6 +10,7 @@ import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
 from . import status  # HTTP Status Codes
+from werkzeug.exceptions import NotFound
 
 # For this example we'll use SQLAlchemy, a popular ORM that supports a
 # variety of backends including SQLite, MySQL, and PostgreSQL
@@ -25,11 +26,14 @@ from . import app
 @app.route("/")
 def index():
     """ Root URL response """
-    app.logger.info("Request for Base URL")
+    app.logger.info("Request for Root URL")
     return (
         jsonify(
-            message="Inventory Service",
-            version="1.0.0",
+            name="Inventory REST API Service",
+            version="1.0",
+            list_path=url_for("list_products", _external=True),
+            # update_path=url_for("update_product", _external=False),
+
         ),
         status.HTTP_200_OK,
     )
@@ -46,23 +50,56 @@ def init_db():
     print("init database sucessfully")
 
 
+
+######################################################################
+# LIST ALL PRODUCTS
+######################################################################
+@app.route("/products", methods=["GET"])
+def list_products():
+    """Returns all of the Pets"""
+    app.logger.info("Request for product list")
+    products = []
+    products = Product.all()
+    results = [product.serialize() for product in products]
+    app.logger.info("Returning %d products", len(results))
+    return make_response(jsonify(results), status.HTTP_200_OK)
+  
+######################################################################
+# ADD A NEW PRODUCT
+######################################################################
 @app.route('/products', methods=['POST'])
 def create_products():
     """create a new product"""
     app.logger.info('Create Product Request')
     product = Product()
-    print(request.json)
     product.deserialize(request.json)
-    print("create")
     product.create()
     app.logger.info('Created Product with id: {}'.format(product.id))
-    print("create_success")
     return make_response(
         jsonify(product.serialize()),
         status.HTTP_201_CREATED,
         {"product_id": product.id}
     )
+  
+######################################################################
+# RETRIEVE A PRODUCT
+######################################################################
+@app.route("/products/<int:product_id>", methods=["GET"])
+def get_products(product_id):
+    """
+    Retrieve a single Product
+    This endpoint will return a Product based on it's id
+    """
+    app.logger.info("Request for product with id: %s", product_id)
+    product = Product.find_or_404(product_id)
+    if not product:
+        raise NotFound("Product with id '{}' was not found.".format(product_id))
+    app.logger.info("Returning pet: %s", product.product_name)
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
+######################################################################
+# DELETE A PRODUCT
+######################################################################  
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 def delete_products(product_id):
     """delete a product"""
@@ -72,8 +109,11 @@ def delete_products(product_id):
         product.delete()
     return make_response('', status.HTTP_204_NO_CONTENT)
 
+######################################################################
+# UPDATE AN EXISTING PRODUCT
+######################################################################
 @app.route('/products/<int:product_id>', methods=['PUT'])
-def update_product(product_id):
+def update_products(product_id):
     """ Update the quantity of product """
     app.logger.info('Request to update Product with id: {} by {}'.format(product_id, quantity))
 

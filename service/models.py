@@ -6,6 +6,7 @@ All of the models are stored in this module
 import logging
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
+from enum import Enum
 
 logger = logging.getLogger("flask.app")
 
@@ -17,6 +18,15 @@ class DataValidationError(Exception):
     """ Used for an data validation errors when deserializing """
 
     pass
+
+
+class Condition(Enum):
+    """Enumeration of valid Pet Genders"""
+
+    NEW = 0
+    OPEN_BOX = 1
+    USED = 2
+    UNKNOWN = 3
 
 
 class Product(db.Model):
@@ -33,7 +43,8 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
-    status = db.Column(db.Integer, default=0) 
+    # status = db.Column(db.Integer, default=0) 
+    status = db.Column(db.Enum(Condition()), nullable=False, default=Condition().UNKNOWN) 
     def read_csv(self, file_path):
         """
         read data from csv to db table
