@@ -105,6 +105,8 @@ def delete_products(product_id):
     """delete a product"""
     app.logger.info('Request to delete Product with id: {}'.format(product_id))
     product = Product.find_or_404(product_id)
+    if not product:
+        raise NotFound("Product with id '{}' was not found.".format(product_id))
     if product:
         product.delete()
     return make_response('', status.HTTP_204_NO_CONTENT)
@@ -114,15 +116,16 @@ def delete_products(product_id):
 ######################################################################
 @app.route('/products/<int:product_id>', methods=['PUT'])
 def update_products(product_id):
-    """ Update the quantity of product """
-    app.logger.info('Request to update Product with id: {} by {}'.format(product_id, quantity))
+    """ Update the product """
+    app.logger.info('Request to update Product with id: {}'.format(product_id))
 
-    product = Product.find(product_id)
+    product = Product.find_or_404(product_id)
     if not product:
-        return make_response('Product with id {} was not found.'.format(product_id), status.HTTP_404_NOT_FOUND)
+        raise NotFound("Product with id '{}' was not found.".format(product_id))
 
-    product.quantity += quantity
+    product.deserialize(request.json)
+    product.id = product_id
     product.save()
 
-    app.logger.info('Product with id {} increases {}.'.format(product_id, quantity))
-    return product.serialize(), status.HTTP_200_OK
+    app.logger.info('Product with id {} updated.'.format(product_id))
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
