@@ -43,8 +43,8 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
-    # status = db.Column(db.Integer, default=0) 
-    status = db.Column(db.Enum(Condition()), nullable=False, default=Condition().UNKNOWN) 
+    # status = db.Column(db.Integer, default=Condition(0)) 
+    status = db.Column(db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)) 
     def read_csv(self, file_path):
         """
         read data from csv to db table
