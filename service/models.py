@@ -76,7 +76,7 @@ class Product(db.Model):
 
     def serialize(self):
         """ Serializes a YourResourceModel into a dictionary """
-        return {"id": self.id, "name": self.product_name}
+        return {"id": self.id, "name": self.product_name, "quantity":self.quantity}
 
     def deserialize(self, data):
         """
@@ -86,14 +86,15 @@ class Product(db.Model):
             data (dict): A dictionary containing the resource data
         """
         try:
-            self.name = data["product_name"]
+            self.product_name = data["product_name"]
+            self.quantity = data["quantity"]
         except KeyError as error:
             raise DataValidationError(
                 "Invalid YourResourceModel: missing " + error.args[0]
             )
         except TypeError as error:
             raise DataValidationError(
-                "Invalid YourResourceModel: body of request contained bad or no data"
+                "Invalid YourResourceModel: body of request contained bad or no data " + str(error)
             )
         return self
 
@@ -140,4 +141,4 @@ class Product(db.Model):
             name (string): the name of the YourResourceModels you want to match
         """
         logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.name == name)
+        return cls.query.filter(cls.product_name == name)

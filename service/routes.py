@@ -4,6 +4,7 @@ My Service
 Describe what your service does here
 """
 
+from math import prod
 import os
 import sys
 import logging
@@ -24,11 +25,14 @@ from . import app
 @app.route("/")
 def index():
     """ Root URL response """
+    app.logger.info("Request for Base URL")
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            message="Inventory Service",
+            version="1.0.0",
+        ),
         status.HTTP_200_OK,
     )
-
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
@@ -46,21 +50,23 @@ def create_products():
     """create a new product"""
     app.logger.info('Create Product Request')
     product = Product()
-    product.deserialize(request.get_json)
+    print(request.json)
+    product.deserialize(request.json)
+    print("create")
     product.create()
     app.logger.info('Created Product with id: {}'.format(product.id))
-    return make_response(jsonify(product.serialize()),
-                        status.HTTP_201_CREATED,
-                        {'location': url_for('get_products', product_id = product.id, _external=True)})
+    print("create_success")
+    return make_response(
+        jsonify(product.serialize()),
+        status.HTTP_201_CREATED,
+        {"product_id": product.id}
+    )
 
 @app.route('/products/<int:product_id>', methods=['DELETE'])
 def delete_products(product_id):
-    "delete a product"
+    """delete a product"""
     app.logger.info('Request to delete Product with id: {}'.format(product_id))
-    product = Product.find_or_404()
+    product = Product.find_or_404(product_id)
     if product:
         product.delete()
     return make_response('', status.HTTP_204_NO_CONTENT)
-
-
-
