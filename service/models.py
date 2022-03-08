@@ -63,9 +63,11 @@ class Product(db.Model):
 
     def save(self):
         """
-        Updates a YourResourceModel to the database
+        Updates a Product to the database
         """
         logger.info("Saving %s", self.product_name)
+        if not self.id:
+            raise DataValidationError("Empty ID")
         db.session.commit()
 
     def delete(self):
