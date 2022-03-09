@@ -52,6 +52,20 @@ class TestProductModel(unittest.TestCase):
     def test_XXXX(self):
         """ Test something """
         self.assertTrue(True)
+    
+    def test_create_a_product(self):
+        """Create a product and assert that it exists"""
+        product = Product(product_name="Green Apple", quantity=5, status=Condition.OPEN_BOX.name)
+        self.assertTrue(product is not None)
+        self.assertEqual(product.id, None)
+        self.assertEqual(product.name, "Fido")
+        self.assertEqual(product.category, "dog")
+        self.assertEqual(product.available, True)
+        self.assertEqual(product.gender, Gender.MALE)
+        product = Product(name="Fido", category="dog", available=False, gender=Gender.FEMALE)
+        self.assertEqual(product.available, False)
+        self.assertEqual(product.gender, Gender.FEMALE)
+
 
     def test_find_by_name(self):
         """Find a Product by Name"""
@@ -64,6 +78,7 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(products[0].status, Condition.NEW)
 
     def test_serialize_a_product(self):
+        """Test serizlization of a product"""
         product = ProductFactory()
         data = product.serialize()
         self.assertNotEqual(data, None)

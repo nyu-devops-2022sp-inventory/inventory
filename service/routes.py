@@ -78,12 +78,16 @@ def create_products():
     app.logger.info('Create Product Request')
     product = Product()
     product.deserialize(request.json)
+    find_product = Product.find_by_name_and_status(product.product_name, product.status)
+    if find_product:
+        abort(status.HTTP_409_CONFLICT, "product {} already exist".format(product.product_name))
     product.create()
+    location_url = url_for("get_products", product_id = product.id, _external=True)
     app.logger.info('Created Product with id: {}'.format(product.id))
     return make_response(
         jsonify(product.serialize()),
         status.HTTP_201_CREATED,
-        {"product_id": product.id}
+        {"Location": location_url}
     )
   
 ######################################################################
