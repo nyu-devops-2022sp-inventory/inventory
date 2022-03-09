@@ -160,6 +160,7 @@ class TestProductServer(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         updated_product = resp.get_json()
         self.assertEqual(new_product["id"], updated_product["id"])
+        self.assertEqual(new_product["quantity"], updated_product["quantity"])
         self.assertEqual(new_product["status"], updated_product["status"])
 
     def test_update_product_not_found(self):
