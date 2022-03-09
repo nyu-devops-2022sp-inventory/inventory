@@ -28,8 +28,9 @@ services:
     ports:
       - 5432:5432
     environment:
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_MULTIPLE_DATABASES: postgres, testdb
+      POSTGRES_MULTIPLE_DATABASES: testdb
     volumes:
       - postgres:/var/lib/postgresql/data
       - ./pg-init-scripts:/docker-entrypoint-initdb.d
