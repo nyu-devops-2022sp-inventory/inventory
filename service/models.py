@@ -24,7 +24,7 @@ class DataValidationError(Exception):
 
 
 class Condition(Enum):
-    """Enumeration of valid Pet Genders"""
+    """Enumeration of valid Product status"""
 
     NEW = 0
     OPEN_BOX = 1
@@ -47,6 +47,7 @@ class Product(db.Model):
     product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
     # status = db.Column(db.Integer, default=Condition(0)) 
+
     status = db.Column(db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)) 
     # def read_csv(self, file_path):
     #     """
@@ -92,7 +93,12 @@ class Product(db.Model):
 
     def serialize(self):
         """ Serializes a Product into a dictionary """
-        return {"id": self.id, "name": self.product_name, "quantity":self.quantity}
+        return {
+            "id": self.id, 
+            "name": self.product_name, 
+            "quantity":self.quantity, 
+            "status":self.status.name
+        }
 
     def deserialize(self, data):
         """
@@ -104,6 +110,7 @@ class Product(db.Model):
         try:
             self.product_name = data["name"]
             self.quantity = data["quantity"]
+            self.status = getattr(Condition, data["status"])
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Product: missing " + error.args[0]
@@ -158,3 +165,13 @@ class Product(db.Model):
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.product_name == name)
+
+    @classmethod
+    def find_by_name_and_status(cls, name, status):
+        """Returns all Products with the given name
+
+        Args:
+            name (string): the name of the Products you want to match
+        """
+        logger.info("Processing name query for %s ...", name)
+        return cls.query.filter(cls.product_name == name and cls.status == status)
