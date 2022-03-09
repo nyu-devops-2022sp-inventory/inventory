@@ -60,7 +60,7 @@ This is particularly useful because it reports the line numbers for the code tha
 
 ## Running the service
 
-The project uses *flask*. To start the service simply use:
+To start the service simply use:
 
 ```shell
 $ flask run
