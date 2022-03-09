@@ -7,10 +7,10 @@ This repository is for inventory group in NYU-DevOps-2022sp class
 The inventory resource keeps track of how many of each product we have in our warehouse. Now, it can reference a product, the quantity and the condition of the item (i.e., new, open box, used)on hand. Inventory will also track restock levels in the future. Restock levels will help us know when to order more products.
 
 **Version 1.0 overview:**
-1. Define the object model in inventory as **products** with attribute id/product_name/quantity/status .
+1. Define the object model in inventory as **products** with attributes as id/product_name/quantity/status .
 2. Implement the CREATE/READ/UPDATE/DELETE/LIST API.
-3. Allow the microservice root URL ('/') should return some useful information about the service like the name, version, and what our resource URL is.
-4. Have a portable environment for development
+3. Allow the microservice root URL ('/') to return some useful information about the service like the name, version, and what our resource URL is.
+4. Have a portable environment for development.
 5. Apply **nosetests** in development process and get coverage of 97%.
 6. Use Docker and a docker-compose.yml file with the Remote Containers extensions for services like PostgreSQL. So that they are running in Docker.
 
@@ -38,7 +38,7 @@ $ code .
 
 ## Running the tests
 
-Run the tests using `nosetests`
+Run the tests using `nosetests`.
 
 - If you are using Windows OS, try
 ```shell
