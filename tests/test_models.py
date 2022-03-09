@@ -9,6 +9,7 @@ import os
 from service.models import Product, DataValidationError, db, Condition
 from service import app
 from werkzeug.exceptions import NotFound
+from .factories import ProductFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql://postgres:postgres@postgres:5432/testdb"
@@ -61,3 +62,14 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(products[0].product_name, "Red Apple")
         self.assertEqual(products[0].quantity, 2)
         self.assertEqual(products[0].status, Condition.NEW)
+
+    def test_serialize_a_product(self):
+        product = ProductFactory()
+        data = product.serialize()
+        self.assertNotEqual(data, None)
+        self.assertIn("id", data)
+        self.assertEqual(data["id"], product.id)
+        self.assertIn("name", data)
+        self.assertEqual(data["name"], product.product_name)
+        self.assertIn("quantity", data)
+        self.assertEqual(data["quantity"], product.quantity)
