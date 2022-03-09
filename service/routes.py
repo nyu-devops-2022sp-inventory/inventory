@@ -76,6 +76,7 @@ def list_products():
 def create_products():
     """create a new product"""
     app.logger.info('Create Product Request')
+    check_content_type("application/json")
     product = Product()
     product.deserialize(request.json)
     find_product = Product.find_by_name_and_status(product.product_name, product.status)
@@ -102,7 +103,7 @@ def get_products(product_id):
     This endpoint will return a Product based on it's id
     """
     app.logger.info("Request for product with id: %s", product_id)
-    product = Product.find_or_404(product_id)
+    product = Product.find(product_id)
     if not product:
         raise NotFound("Product with id '{}' was not found.".format(product_id))
     app.logger.info("Returning product: %s", product.product_name)
@@ -115,7 +116,7 @@ def get_products(product_id):
 def delete_products(product_id):
     """delete a product"""
     app.logger.info('Request to delete Product with id: {}'.format(product_id))
-    product = Product.find_or_404(product_id)
+    product = Product.find(product_id)
     if not product:
         raise NotFound("Product with id '{}' was not found.".format(product_id))
     if product:
@@ -129,8 +130,8 @@ def delete_products(product_id):
 def update_products(product_id):
     """ Update the product """
     app.logger.info('Request to update Product with id: {}'.format(product_id))
-
-    product = Product.find_or_404(product_id)
+    check_content_type("application/json")
+    product = Product.find(product_id)
     if not product:
         raise NotFound("Product with id '{}' was not found.".format(product_id))
 
@@ -140,3 +141,19 @@ def update_products(product_id):
 
     app.logger.info('Product with id {} updated.'.format(product_id))
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
+######################################################################
+#  U T I L I T Y   F U N C T I O N S
+######################################################################
+
+
+def check_content_type(media_type):
+    """Checks that the media type is correct"""
+    content_type = request.headers.get("Content-Type")
+    if content_type and content_type == media_type:
+        return
+    app.logger.error("Invalid Content-Type: %s", content_type)
+    abort(
+        status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+        "Content-Type must be {}".format(media_type),
+    )

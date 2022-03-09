@@ -10,6 +10,7 @@ import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 from urllib.parse import quote_plus
+from werkzeug.exceptions import NotFound
 from service import status  # HTTP Status Codes
 from service.models import db, Product, init_db, Condition
 from service.routes import app
@@ -39,7 +40,7 @@ class TestProductServer(TestCase):
         app.config["DEBUG"] = False
         # Set up the test database
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.DEBUG)
+        app.logger.setLevel(logging.CRITICAL)
         init_db(app)
 
     @classmethod
@@ -111,7 +112,6 @@ class TestProductServer(TestCase):
         resp = self.app.get("/products/0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_create_product(self):
         """Create a new Product"""
         test_product = ProductFactory()
@@ -137,6 +137,33 @@ class TestProductServer(TestCase):
         self.assertEqual(
             new_product["quantity"], test_product.quantity, "Quantity do not match"
         )
+
+    def test_create_existing_product(self):
+        """Create an existing Product"""
+        # create an product to update
+        test_product = ProductFactory()
+        resp = self.app.post( # Create the product
+            BASE_URL, json=test_product.serialize(), content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        
+        # update the product
+        new_product = resp.get_json()
+
+        resp = self.app.post(
+            BASE_URL, json=new_product, content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+    def test_create_product_no_data(self):
+        """Create a Product with missing data"""
+        resp = self.app.post(BASE_URL, json={}, content_type=CONTENT_TYPE_JSON)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_product_no_content_type(self):
+        """Create a Product with no content type"""
+        resp = self.app.post(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_update_product(self):
         """Update an existing Product"""
@@ -187,3 +214,7 @@ class TestProductServer(TestCase):
             "{0}/{1}".format(BASE_URL, test_product.id), content_type=CONTENT_TYPE_JSON
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_method_not_allowed(self):
+        resp = self.app.put(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
