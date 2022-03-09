@@ -122,16 +122,6 @@ class TestProductModel(unittest.TestCase):
         product.delete()
         self.assertEqual(len(product.all()), 0)
 
-    def test_find_by_name(self):
-        """Find a Product by Name"""
-        test_product = Product(product_name="Red Apple", quantity=2, status=Condition.NEW)
-        test_product.create()
-        Product(product_name="Green Apple", quantity=5, status=Condition.OPEN_BOX.name).create()
-        products = Product.find_by_name("Red Apple")
-        self.assertEqual(products[0].product_name, "Red Apple")
-        self.assertEqual(products[0].quantity, 2)
-        self.assertEqual(products[0].status, Condition.NEW)
-
     def test_serialize_a_product(self):
         """Serialize a Product"""
         product = ProductFactory()
@@ -162,6 +152,7 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(product.quantity, 5)
         self.assertEqual(product.status, Condition.NEW)
 
+
     def test_deserialize_missing_data(self):
         """Test deserialization of a Product with missing data"""
         data = {"id": 7, "name": "Test Apple"}
@@ -173,6 +164,7 @@ class TestProductModel(unittest.TestCase):
         data = "this is not a dictionary"
         product = Product()
         self.assertRaises(DataValidationError, product.deserialize, data)
+
 
     def test_find_or_404_found(self):
         """Find or return 404 found"""
