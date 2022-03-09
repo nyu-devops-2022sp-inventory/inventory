@@ -105,3 +105,49 @@ class TestProductServer(TestCase):
         # check the data just to be sure
         for product in data:
             self.assertEqual(product["name"], test_name)
+    
+    def test_get_product_not_found(self):
+        """Get a Product thats not found"""
+        resp = self.app.get("/products/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_create_product(self):
+        """Create a new Product"""
+        test_product = ProductFactory()
+        logging.debug(test_product)
+        resp = self.app.post(
+            BASE_URL, json=test_product.serialize(), content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+        # Check the data is correct
+        new_product = resp.get_json()
+        self.assertEqual(new_product["name"], test_product.product_name, "Names do not match")
+        self.assertEqual(
+            new_product["quantity"], test_product.quantity, "Quantity do not match"
+        )
+        # Check that the location header was correct
+        resp = self.app.get(location, content_type=CONTENT_TYPE_JSON)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        new_product = resp.get_json()
+        self.assertEqual(new_product["name"], test_product.product_name, "Names do not match")
+        self.assertEqual(
+            new_product["quantity"], test_product.quantity, "Quantity do not match"
+        )
+
+    def test_delete_product(self):
+        """Delete a Product"""
+        test_product = self._create_products(1)[0]
+        resp = self.app.delete(
+            "{0}/{1}".format(BASE_URL, test_product.id), content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+        # make sure they are deleted
+        resp = self.app.get(
+            "{0}/{1}".format(BASE_URL, test_product.id), content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

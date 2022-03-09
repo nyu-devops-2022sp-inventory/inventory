@@ -6,6 +6,8 @@ import logging
 from multiprocessing import Condition
 import unittest
 import os
+
+from numpy import product
 from service.models import Product, DataValidationError, db, Condition
 from service import app
 from werkzeug.exceptions import NotFound
@@ -52,20 +54,41 @@ class TestProductModel(unittest.TestCase):
     def test_XXXX(self):
         """ Test something """
         self.assertTrue(True)
-    
+
     def test_create_a_product(self):
         """Create a product and assert that it exists"""
-        product = Product(product_name="Green Apple", quantity=5, status=Condition.OPEN_BOX.name)
+        product = Product(product_name="Green Apple", quantity=5, status=Condition.OPEN_BOX)
         self.assertTrue(product is not None)
         self.assertEqual(product.id, None)
-        self.assertEqual(product.name, "Fido")
-        self.assertEqual(product.category, "dog")
-        self.assertEqual(product.available, True)
-        self.assertEqual(product.gender, Gender.MALE)
-        product = Product(name="Fido", category="dog", available=False, gender=Gender.FEMALE)
-        self.assertEqual(product.available, False)
-        self.assertEqual(product.gender, Gender.FEMALE)
+        self.assertEqual(product.product_name, "Green Apple")
+        self.assertEqual(product.status, Condition.OPEN_BOX)
+        product = Product(product_name="Green Apple", quantity=5, status=Condition.UNKNOWN)
+        self.assertTrue(product is not None)
+        self.assertEqual(product.id, None)
+        self.assertEqual(product.product_name, "Green Apple")
+        self.assertEqual(product.status, Condition.UNKNOWN)
 
+    def test_add_a_product(self):
+        """Create a Product and add it to the database"""
+        products = Product.all()
+        self.assertEqual(products, [])
+        product = Product(product_name="Green Apple", quantity=5, status=Condition.UNKNOWN)
+        self.assertTrue(product is not None)
+        self.assertEqual(product.id, None)
+        product.create()
+        # Assert that it was assigned an id and shows up in the database
+        self.assertEqual(product.id, 1)
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+
+    def test_delete_a_product(self):
+        """Delete a Product"""
+        product = ProductFactory()
+        product.create()
+        self.assertEqual(len(product.all()), 1)
+        # delete the product and make sure it isn't in the database
+        product.delete()
+        self.assertEqual(len(product.all()), 0)
 
     def test_find_by_name(self):
         """Find a Product by Name"""
@@ -88,3 +111,33 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(data["name"], product.product_name)
         self.assertIn("quantity", data)
         self.assertEqual(data["quantity"], product.quantity)
+        self.assertIn("status", data)
+        self.assertEqual(data["status"], product.status.name)
+
+    def test_deserialize_a_product(self):
+        """Test deserialization of a Product"""
+        data = {
+            "id": 1,
+            "name": "Apple",
+            "quantity": 5,
+            "status": "NEW",
+        }
+        product = Product()
+        product.deserialize(data)
+        self.assertNotEqual(product, None)
+        self.assertEqual(product.id, None)
+        self.assertEqual(product.product_name, "Apple")
+        self.assertEqual(product.quantity, 5)
+        self.assertEqual(product.status, Condition.NEW)
+
+    def test_find_or_404_found(self):
+        """Find or return 404 found"""
+        products = ProductFactory.create_batch(3)
+        for product in products:
+            product.create()
+
+        product = product.find_or_404(products[1].id)
+        self.assertIsNot(product, None)
+        self.assertEqual(product.id, products[1].id)
+        self.assertEqual(product.product_name, products[1].product_name)
+        self.assertEqual(product.quantity, products[1].quantity)

@@ -174,4 +174,4 @@ class Product(db.Model):
             name (string): the name of the Products you want to match
         """
         logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.product_name == name and cls.status == status)
+        return cls.query.filter(cls.product_name == name, cls.status == status).first()
