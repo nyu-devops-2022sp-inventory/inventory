@@ -81,6 +81,38 @@ class TestProductModel(unittest.TestCase):
         products = Product.all()
         self.assertEqual(len(products), 1)
 
+    def test_update_a_product(self):
+        """Update a Product"""
+        product = ProductFactory()
+        logging.debug(product)
+        product.create()
+        logging.debug(product)
+        self.assertEqual(product.id, 1)
+        # Change it an save it
+        product.product_name = "apple"
+        product.quantity = 100
+        product.status = Condition.UNKNOWN
+        original_id = product.id
+        product.save()
+        self.assertEqual(product.id, original_id)
+        self.assertEqual(product.product_name, "apple")
+        self.assertEqual(product.quantity, 100)
+        self.assertEqual(product.status, Condition.UNKNOWN)
+        # Fetch it back and make sure the id hasn't changed
+        # but the data did change
+        products = Product.all()
+        self.assertEqual(len(products), 1)
+        self.assertEqual(products[0].id, 1)
+        self.assertEqual(products[0].product_name, "apple")
+        self.assertEqual(products[0].quantity, 100)
+        self.assertEqual(products[0].status, Condition.UNKNOWN)
+
+    def test_update_empty_id(self):
+        """Test update a Product without id"""
+        product_wt_id = ProductFactory()
+        product_wt_id.id = None
+        self.assertRaises(DataValidationError, product_wt_id.save)
+
     def test_delete_a_product(self):
         """Delete a Product"""
         product = ProductFactory()
