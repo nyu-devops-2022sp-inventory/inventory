@@ -79,11 +79,12 @@ def create_products():
     product = Product()
     product.deserialize(request.json)
     product.create()
+    location_url = url_for("get_products", product_id=product.id, _external=True)
     app.logger.info('Created Product with id: {}'.format(product.id))
     return make_response(
         jsonify(product.serialize()),
         status.HTTP_201_CREATED,
-        {"product_id": product.id}
+        {"Location": location_url}
     )
   
 ######################################################################
