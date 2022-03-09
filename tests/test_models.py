@@ -109,9 +109,9 @@ class TestProductModel(unittest.TestCase):
 
     def test_update_empty_id(self):
         """Test update a Product without id"""
-        product_wt_id = ProductFactory()
-        product_wt_id.id = None
-        self.assertRaises(DataValidationError, product_wt_id.save)
+        test_product = ProductFactory()
+        test_product.id = None
+        self.assertRaises(DataValidationError, test_product.save)
 
     def test_delete_a_product(self):
         """Delete a Product"""
