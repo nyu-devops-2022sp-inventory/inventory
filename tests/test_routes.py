@@ -139,42 +139,42 @@ class TestProductServer(TestCase):
         )
 
     def test_update_product(self):
-		"""Update an existing Product"""
-		# create an product to update
-		test_product = ProductFactory()
-		resp = self.app.post( # Create the product
-			BASE_URL, json=test_product.serialize(), content_type=CONTENT_TYPE_JSON
-		)
-		self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
-
-		# update the product
-		new_product = resp.get_json()
-		logging.debug(new_product)
-		new_product["product_name"] = "apple"
+        """Update an existing Product"""
+        # create an product to update
+        test_product = ProductFactory()
+        resp = self.app.post( # Create the product
+            BASE_URL, json=test_product.serialize(), content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        
+        # update the product
+        new_product = resp.get_json()
+        logging.debug(new_product)
+        new_product["product_name"] = "apple"
         new_product["quantity"] = 50
         new_product["status"] = Condition.UNKNOWN
-		resp = self.app.put(
-			BASE_URL + "/{}".format(data["id"]),
-			json=new_product,
-			content_type=CONTENT_TYPE_JSON,
-		)
-		self.assertEqual(resp.status_code, status.HTTP_200_OK)
-		updated_product = resp.get_json()
-		self.assertEqual(data["id"], updated_inv["id"])
-		self.assertEqual(data["product_name"], updated_inv["product_name"])
-		self.assertEqual(data["quantity"], updated_inv["quantity"])
-		self.assertEqual(data["status"], updated_inv["status"])
+        resp = self.app.put(
+            BASE_URL + "/{}".format(new_product["id"]),
+            json=new_product,
+            content_type=CONTENT_TYPE_JSON,
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_product = resp.get_json()
+        self.assertEqual(new_product["id"], updated_product["id"])
+        self.assertEqual(new_product["product_name"], updated_product["product_name"])
+        self.assertEqual(new_product["quantity"], updated_product["quantity"])
+        self.assertEqual(new_product["status"], updated_product["status"])
 
-	def test_update_product_not_found(self):
-		"""Update a non-existing Product"""
+    def test_update_product_not_found(self):
+        """Update a non-existing Product"""
         # create an product without id to update
-		new_product = ProductFactory()
-		resp = self.app.put(
-			BASE_URL + "/{}".format(new_product.id),
-			json=new_product.serialize(),
-			content_type=CONTENT_TYPE_JSON,
-		)
-		self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        new_product = ProductFactory()
+        resp = self.app.put(
+            BASE_URL + "/{}".format(new_product.id),
+            json=new_product.serialize(),
+            content_type=CONTENT_TYPE_JSON,
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_product(self):
         """Delete a Product"""
