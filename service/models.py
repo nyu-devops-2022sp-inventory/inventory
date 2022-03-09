@@ -1,9 +1,10 @@
 """
-Models for YourResourceModel
+Models for Product
 
 All of the models are stored in this module
 """
 import logging
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 from enum import Enum
@@ -13,6 +14,8 @@ logger = logging.getLogger("flask.app")
 # Create the SQLAlchemy object to be initialized later in init_db()
 db = SQLAlchemy()
 
+def init_db(app):
+    Product.init_db(app)
 
 class DataValidationError(Exception):
     """ Used for an data validation errors when deserializing """
@@ -65,7 +68,7 @@ class Product(db.Model):
 
     def create(self):
         """
-        Creates a YourResourceModel to the database
+        Creates a Product to the database
         """
         logger.info("Creating %s with quantity %d", self.product_name, self.quantity)
         self.id = None  # id must be none to generate next primary key
@@ -82,18 +85,18 @@ class Product(db.Model):
         db.session.commit()
 
     def delete(self):
-        """ Removes a YourResourceModel from the data store """
+        """ Removes a Product from the data store """
         logger.info("Deleting %s", self.product_name)
         db.session.delete(self)
         db.session.commit()
 
     def serialize(self):
-        """ Serializes a YourResourceModel into a dictionary """
+        """ Serializes a Product into a dictionary """
         return {"id": self.id, "name": self.product_name, "quantity":self.quantity}
 
     def deserialize(self, data):
         """
-        Deserializes a YourResourceModel from a dictionary
+        Deserializes a Product from a dictionary
 
         Args:
             data (dict): A dictionary containing the resource data
@@ -103,16 +106,16 @@ class Product(db.Model):
             self.quantity = data["quantity"]
         except KeyError as error:
             raise DataValidationError(
-                "Invalid YourResourceModel: missing " + error.args[0]
+                "Invalid Product: missing " + error.args[0]
             )
         except TypeError as error:
             raise DataValidationError(
-                "Invalid YourResourceModel: body of request contained bad or no data " + str(error)
+                "Invalid Product: body of request contained bad or no data " + str(error)
             )
         return self
 
     @classmethod
-    def init_db(cls, app):
+    def init_db(cls, app: Flask):
         """ Initializes the database session """
         logger.info("Initializing database")
         cls.app = app
@@ -122,36 +125,36 @@ class Product(db.Model):
         db.create_all()  # make our sqlalchemy tables
         # first time init need this
         # Product.read_csv(app,"./products.csv")
-        q1 = db.session.query(Product).filter(Product.product_name=="apple").first()
-        q2 = db.session.query(Product).filter(Product.id==1).first()
-        print(q1)
-        print(q2)
+        #q1 = db.session.query(Product).filter(Product.product_name=="apple").first()
+        #q2 = db.session.query(Product).filter(Product.id==1).first()
+        #print(q1)
+        #print(q2)
         
 
     @classmethod
     def all(cls):
-        """ Returns all of the YourResourceModels in the database """
-        logger.info("Processing all YourResourceModels")
+        """ Returns all of the Products in the database """
+        logger.info("Processing all Products")
         return cls.query.all()
 
     @classmethod
     def find(cls, by_id):
-        """ Finds a YourResourceModel by it's ID """
+        """ Finds a Product by it's ID """
         logger.info("Processing lookup for id %s ...", by_id)
         return cls.query.get(by_id)
 
     @classmethod
     def find_or_404(cls, by_id):
-        """ Find a YourResourceModel by it's id """
+        """ Find a Product by it's id """
         logger.info("Processing lookup or 404 for id %s ...", by_id)
         return cls.query.get_or_404(by_id)
 
     @classmethod
     def find_by_name(cls, name):
-        """Returns all YourResourceModels with the given name
+        """Returns all Products with the given name
 
         Args:
-            name (string): the name of the YourResourceModels you want to match
+            name (string): the name of the Products you want to match
         """
         logger.info("Processing name query for %s ...", name)
         return cls.query.filter(cls.product_name == name)

@@ -1,35 +1,49 @@
 """
-Test cases for YourResourceModel Model
+Test cases for Product Model
 
 """
 import logging
+from multiprocessing import Condition
 import unittest
 import os
-from service.models import YourResourceModel, DataValidationError, db
+from service.models import Product, DataValidationError, db, Condition
+from service import app
+from werkzeug.exceptions import NotFound
+from .factories import ProductFactory
+
+DATABASE_URI = os.getenv(
+    "DATABASE_URI", "postgresql://postgres:postgres@postgres:5432/testdb"
+)
 
 ######################################################################
-#  <your resource name>   M O D E L   T E S T   C A S E S
+#  P R O D U C T   M O D E L   T E S T   C A S E S
 ######################################################################
-class TestYourResourceModel(unittest.TestCase):
-    """ Test Cases for YourResourceModel Model """
+class TestProductModel(unittest.TestCase):
+    """ Test Cases for Product Model """
 
     @classmethod
     def setUpClass(cls):
         """ This runs once before the entire test suite """
-        pass
+        app.config["TESTING"] = True
+        app.config["DEBUG"] = False
+        app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
+        app.logger.setLevel(logging.CRITICAL)
+        Product.init_db(app)
 
     @classmethod
     def tearDownClass(cls):
         """ This runs once after the entire test suite """
-        pass
+        db.session.close()
 
     def setUp(self):
         """ This runs before each test """
-        pass
+        db.drop_all()
+        db.create_all()
 
     def tearDown(self):
         """ This runs after each test """
-        pass
+        db.session.remove()
+        db.drop_all()
 
     ######################################################################
     #  T E S T   C A S E S
@@ -38,3 +52,24 @@ class TestYourResourceModel(unittest.TestCase):
     def test_XXXX(self):
         """ Test something """
         self.assertTrue(True)
+
+    def test_find_by_name(self):
+        """Find a Product by Name"""
+        test_product = Product(product_name="Red Apple", quantity=2, status=Condition.NEW)
+        test_product.create()
+        Product(product_name="Green Apple", quantity=5, status=Condition.OPEN_BOX.name).create()
+        products = Product.find_by_name("Red Apple")
+        self.assertEqual(products[0].product_name, "Red Apple")
+        self.assertEqual(products[0].quantity, 2)
+        self.assertEqual(products[0].status, Condition.NEW)
+
+    def test_serialize_a_product(self):
+        product = ProductFactory()
+        data = product.serialize()
+        self.assertNotEqual(data, None)
+        self.assertIn("id", data)
+        self.assertEqual(data["id"], product.id)
+        self.assertIn("name", data)
+        self.assertEqual(data["name"], product.product_name)
+        self.assertIn("quantity", data)
+        self.assertEqual(data["quantity"], product.quantity)
