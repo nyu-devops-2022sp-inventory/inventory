@@ -98,7 +98,7 @@ curl -X POST \
   -d '{"name":"apple", "quantity":2, "status":"NEW"}'
 ```
 
-Read a product(remember change the <product_id> into a real id number):
+Read a product(hint: change the <product_id> into a real id number):
 
 ```bash
 curl -X GET \
