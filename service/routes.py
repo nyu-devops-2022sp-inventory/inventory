@@ -82,7 +82,9 @@ def create_products():
     if find_product:
         abort(status.HTTP_409_CONFLICT, "product {} already exist".format(product.product_name))
     product.create()
-    location_url = url_for("get_products", product_id = product.id, _external=True)
+
+    location_url = url_for("get_products", product_id=product.id, _external=True)
+
     app.logger.info('Created Product with id: {}'.format(product.id))
     return make_response(
         jsonify(product.serialize()),

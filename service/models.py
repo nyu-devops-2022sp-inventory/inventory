@@ -47,19 +47,18 @@ class Product(db.Model):
     product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
     # status = db.Column(db.Integer, default=Condition(0)) 
-    status = db.Column(
-        db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)
-        ) 
-    def read_csv(self, file_path):
-        """
-        read data from csv to db table
-        """
-        df = pd.read_csv(file_path)
-        self.id = None
-        for _, row in df.iterrows():
-            db.session.add(Product(product_name = str(row[1]), quantity =int(row[2]), status=int(row[3])))
-            db.session.commit()
-        logger.info("loading data from csv file successfully")
+
+    status = db.Column(db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)) 
+    # def read_csv(self, file_path):
+    #     """
+    #     read data from csv to db table
+    #     """
+    #     df = pd.read_csv(file_path)
+    #     self.id = None
+    #     for _, row in df.iterrows():
+    #         db.session.add(Product(product_name = str(row[1]), quantity =int(row[2]), status=int(row[3])))
+    #         db.session.commit()
+    #     logger.info("loading data from csv file successfully")
 
 
     def __repr__(self):

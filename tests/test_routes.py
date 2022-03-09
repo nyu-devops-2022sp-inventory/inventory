@@ -9,9 +9,11 @@ import os
 import logging
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
+from urllib.parse import quote_plus
 from service import status  # HTTP Status Codes
-from service.models import db, init_db
+from service.models import db, Product, init_db, Condition
 from service.routes import app
+from .factories import ProductFactory
 
 # Disable all but critical errors during normal test run
 # uncomment for debugging failing tests
@@ -37,7 +39,7 @@ class TestProductServer(TestCase):
         app.config["DEBUG"] = False
         # Set up the test database
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-        app.logger.setLevel(logging.CRITICAL)
+        app.logger.setLevel(logging.DEBUG)
         init_db(app)
 
     @classmethod
@@ -64,3 +66,42 @@ class TestProductServer(TestCase):
         """ Test index call """
         resp = self.app.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+    def _create_products(self, count):
+        """Factory method to create products in bulk"""
+        products = []
+        for _ in range(count):
+            test_product = ProductFactory()
+            resp = self.app.post(
+                BASE_URL, json=test_product.serialize(), content_type=CONTENT_TYPE_JSON
+            )
+            self.assertEqual(
+                resp.status_code, status.HTTP_201_CREATED
+            )
+            new_product = resp.get_json()
+            test_product.id = new_product["id"]
+            products.append(test_product)
+        return products
+
+    def test_get_product_list(self):
+        """Get a list of Products"""
+        self._create_products(5)
+        resp = self.app.get(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 5)
+
+    def test_query_product_list_by_name(self):
+        """Query Products by name"""
+        products = self._create_products(10)
+        test_name = products[0].product_name
+        name_products = [product for product in products if product.product_name == test_name]
+        resp = self.app.get(
+            BASE_URL, query_string="name={}".format(quote_plus(test_name))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(name_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["name"], test_name)

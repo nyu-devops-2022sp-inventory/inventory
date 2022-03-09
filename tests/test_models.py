@@ -78,7 +78,7 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(products[0].status, Condition.NEW)
 
     def test_serialize_a_product(self):
-        """Test serizlization of a product"""
+        """Serialize a Product"""
         product = ProductFactory()
         data = product.serialize()
         self.assertNotEqual(data, None)
