@@ -54,7 +54,7 @@ def init_db():
 ######################################################################
 # LIST ALL PRODUCTS
 ######################################################################
-@app.route("/products", methods=["GET"])
+@app.route("/inventory", methods=["GET"])
 def list_products():
     """Returns all of the Products"""
     app.logger.info("Request for product list")
@@ -72,7 +72,7 @@ def list_products():
 ######################################################################
 # ADD A NEW PRODUCT
 ######################################################################
-@app.route('/products', methods=['POST'])
+@app.route('/inventory', methods=['POST'])
 def create_products():
     """create a new product"""
     app.logger.info('Create Product Request')
@@ -96,7 +96,7 @@ def create_products():
 ######################################################################
 # RETRIEVE A PRODUCT
 ######################################################################
-@app.route("/products/<int:product_id>", methods=["GET"])
+@app.route("/inventory/<int:product_id>", methods=["GET"])
 def get_products(product_id):
     """
     Retrieve a single Product
@@ -112,7 +112,7 @@ def get_products(product_id):
 ######################################################################
 # DELETE A PRODUCT
 ######################################################################  
-@app.route('/products/<int:product_id>', methods=['DELETE'])
+@app.route('/inventory/<int:product_id>', methods=['DELETE'])
 def delete_products(product_id):
     """delete a product"""
     app.logger.info('Request to delete Product with id: {}'.format(product_id))
@@ -126,7 +126,7 @@ def delete_products(product_id):
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
 ######################################################################
-@app.route('/products/<int:product_id>', methods=['PUT'])
+@app.route('/inventory/<int:product_id>', methods=['PUT'])
 def update_products(product_id):
     """ Update the product """
     app.logger.info('Request to update Product with id: {}'.format(product_id))
