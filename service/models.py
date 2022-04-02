@@ -38,12 +38,13 @@ class Product(db.Model):
     """
     __tablename__ = "products"
     __table_args__ = (
-        db.UniqueConstraint('product_name', 'status', name='unique_product_status'),
+        db.UniqueConstraint('product_id', 'status', name='unique_product_status'),
     )
     # Table Schema
     
 
     id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer)
     product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
     # status = db.Column(db.Integer, default=Condition(0)) 
@@ -95,6 +96,7 @@ class Product(db.Model):
         """ Serializes a Product into a dictionary """
         return {
             "id": self.id, 
+            "product_id": self.product_id,
             "name": self.product_name, 
             "quantity":self.quantity, 
             "status":self.status.name
@@ -111,6 +113,7 @@ class Product(db.Model):
             self.product_name = data["name"]
             self.quantity = data["quantity"]
             self.status = getattr(Condition, data["status"])
+            self.product_id = data["product_id"]
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Product: missing " + error.args[0]
