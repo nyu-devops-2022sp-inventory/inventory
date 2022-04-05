@@ -177,6 +177,18 @@ def update_products(product_id, product_condition):
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
+# QUERY PRODUCTS BY NAME
+######################################################################
+@app.route("/inventory/<string:name>", methods=["GET"])
+def query_products_by_name(name):
+    """Get all products with specific name"""
+    app.logger.info("Request for products list by product name")
+    products = Product.find_by_name(name)
+    results = [product.serialize() for product in products]
+    app.logger.info("Returning %d products", len(results))
+    return make_response(jsonify(results), status.HTTP_200_OK)
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 

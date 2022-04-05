@@ -5,6 +5,7 @@ psycopg2==2.9.3
 python-dotenv==0.19.2
 pandas==1.4.1
 numpy==1.22.2
+werkzeug==2.0.3
 
 # Runtime
 gunicorn==20.1.0

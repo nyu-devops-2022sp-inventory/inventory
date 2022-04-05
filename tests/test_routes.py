@@ -218,3 +218,29 @@ class TestProductServer(TestCase):
     def test_method_not_allowed(self):
         resp = self.app.put(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def test_query_products_by_name(self):
+        """Query Products by a Specific name"""
+        products = self._create_products(10)
+        test_name = products[0].product_name
+        name_products = [product for product in products if product.product_name == test_name]
+        resp = self.app.get(
+            "{}/{}".format(BASE_URL, test_name)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(name_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["name"], test_name)
+    
+    def test_query_products_with_not_exist_name(self):
+        """Query Products by non-exist name"""
+        products = self._create_products(3)
+        test_name = products[0].product_name + products[1].product_name + products[2].product_name
+        resp = self.app.get(
+            "{}/{}".format(BASE_URL, test_name)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
