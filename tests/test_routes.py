@@ -188,7 +188,7 @@ class TestProductServer(TestCase):
         updated_product = resp.get_json()
         self.assertEqual(new_product["id"], updated_product["id"])
         self.assertEqual(new_product["quantity"], updated_product["quantity"])
-        self.assertEqual(new_product["status"], updated_product["status"])
+        self.assertEqual(new_product["condition"], updated_product["condition"])
 
     def test_update_product_not_found(self):
         """Update a non-existing Product"""

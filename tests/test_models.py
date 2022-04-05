@@ -57,13 +57,13 @@ class TestProductModel(unittest.TestCase):
 
     def test_create_a_product(self):
         """Create a product and assert that it exists"""
-        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, status=Condition.OPEN_BOX)
+        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, condition=Condition.OPEN_BOX)
         self.assertTrue(product is not None)
         self.assertEqual(product.id, None)
         self.assertEqual(product.product_id, 10001)
         self.assertEqual(product.product_name, "Green Apple")
         self.assertEqual(product.condition, Condition.OPEN_BOX)
-        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, status=Condition.UNKNOWN)
+        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, condition=Condition.UNKNOWN)
         self.assertTrue(product is not None)
         self.assertEqual(product.id, None)
         self.assertEqual(product.product_id, 10001)
@@ -74,7 +74,7 @@ class TestProductModel(unittest.TestCase):
         """Create a Product and add it to the database"""
         products = Product.all()
         self.assertEqual(products, [])
-        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, status=Condition.UNKNOWN)
+        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, condition=Condition.UNKNOWN)
         self.assertTrue(product is not None)
         self.assertEqual(product.id, None)
         product.create()
