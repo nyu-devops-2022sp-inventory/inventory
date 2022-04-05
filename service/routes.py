@@ -79,14 +79,14 @@ def create_products():
     check_content_type("application/json")
     product = Product()
     product.deserialize(request.json)
-    find_product = Product.find_by_name_and_status(product.product_name, product.status)
+    find_product = Product.find_by_id_and_condition(product.product_id, product.condition)
     if find_product:
-        abort(status.HTTP_409_CONFLICT, "product {} already exist".format(product.product_name))
+        abort(status.HTTP_409_CONFLICT, 'product {} with condition {} already exist'.format(product.product_id, product.condition))
     product.create()
 
-    location_url = url_for("get_products", product_id=product.id, _external=True)
+    location_url = url_for("get_products", product_id=product.product_id, product_condition=product.condition.name, _external=True)
 
-    app.logger.info('Created Product with id: {}'.format(product.id))
+    app.logger.info('Created Product with id: {}'.format(product.product_id))
     return make_response(
         jsonify(product.serialize()),
         status.HTTP_201_CREATED,
@@ -94,31 +94,66 @@ def create_products():
     )
   
 ######################################################################
-# RETRIEVE A PRODUCT
+# RETRIEVE A PRODUCT WITH PRODUCT ID
 ######################################################################
 @app.route("/inventory/<int:product_id>", methods=["GET"])
-def get_products(product_id):
+def get_products_with_id(product_id):
     """
-    Retrieve a single Product
+    Retrieve Product
     This endpoint will return a Product based on it's id
     """
     app.logger.info("Request for product with id: %s", product_id)
-    product = Product.find(product_id)
-    if not product:
+    products = []
+    products = Product.find_by_id(product_id)
+    if not products:
         raise NotFound("Product with id '{}' was not found.".format(product_id))
-    app.logger.info("Returning product: %s", product.product_name)
+    else:
+        results = [product.serialize() for product in products]
+    app.logger.info("Returning product: %s", product_id)
+    return make_response(jsonify(results), status.HTTP_200_OK)
+
+######################################################################
+# RETRIEVE A PRODUCT WITH PRODUCT ID AND STATUS
+######################################################################
+@app.route("/inventory/<int:product_id>/condition/<string:product_condition>", methods=["GET"])
+def get_products(product_id, product_condition):
+    """
+    Retrieve a single Product
+    This endpoint will return a Product based on it's id and it's condition
+    """
+    app.logger.info("Request for product with id: %s and condition: %s", product_id, product_condition)
+    product = Product.find_by_id_and_condition(product_id, product_condition)
+    if not product:
+        raise NotFound('Product {} with condition {} was not found'.format(product_id, product_condition))
+    app.logger.info("Returning product: %s", product_id)
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
-# DELETE A PRODUCT
+# DELETE A PRODUCT WITH PRODUCT ID
 ######################################################################  
 @app.route('/inventory/<int:product_id>', methods=['DELETE'])
 def delete_products(product_id):
     """delete a product"""
-    app.logger.info('Request to delete Product with id: {}'.format(product_id))
-    product = Product.find(product_id)
-    if not product:
+    app.logger.info('Request to delete Product with id: %s', product_id)
+    products = []
+    products = Product.find_by_id(product_id)
+    if not products:
         raise NotFound("Product with id '{}' was not found.".format(product_id))
+    else:
+        for product in products:
+            product.delete()
+    return make_response('', status.HTTP_204_NO_CONTENT)
+
+######################################################################
+# DELETE A PRODUCT WITH PRODUCT ID AND STATUS
+######################################################################  
+@app.route('/inventory/<int:product_id>/condition/<string:product_condition>', methods=['DELETE'])
+def delete_products_with_id(product_id, product_condition):
+    """delete a product"""
+    app.logger.info('Request to delete Product with id: %s and condition: %s', product_id, product_condition)
+    product = Product.find_by_id_and_condition(product_id, product_condition)
+    if not product:
+        raise NotFound('product {} with condition {} was not found'.format(product_id, product_condition))
     if product:
         product.delete()
     return make_response('', status.HTTP_204_NO_CONTENT)
@@ -126,17 +161,16 @@ def delete_products(product_id):
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
 ######################################################################
-@app.route('/inventory/<int:product_id>', methods=['PUT'])
-def update_products(product_id):
+@app.route('/inventory/<int:product_id>/condition/<string:product_condition>', methods=['PUT'])
+def update_products(product_id, product_condition):
     """ Update the product """
-    app.logger.info('Request to update Product with id: {}'.format(product_id))
+    app.logger.info('Request to update Product with id: %s and condition: %s', product_id, product_condition)
     check_content_type("application/json")
-    product = Product.find(product_id)
+    product = Product.find_by_id_and_condition(product_id, product_condition)
     if not product:
-        raise NotFound("Product with id '{}' was not found.".format(product_id))
-
+        raise NotFound('product {} with condition {} was not found'.format(product_id, product_condition))
     product.deserialize(request.json)
-    product.id = product_id
+    #product.id = product_id
     product.save()
 
     app.logger.info('Product with id {} updated.'.format(product_id))
