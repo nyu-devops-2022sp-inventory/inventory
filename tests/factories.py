@@ -1,6 +1,6 @@
 from multiprocessing import Condition
 import factory
-from factory.fuzzy import FuzzyChoice
+from factory.fuzzy import FuzzyChoice, FuzzyInteger
 from service.models import Product, Condition
 
 
@@ -13,6 +13,9 @@ class ProductFactory(factory.Factory):
         model = Product
 
     id = factory.Sequence(lambda n: n)
+    product_id = FuzzyInteger(10000, 10100)
     product_name = factory.Faker("first_name")
     quantity = factory.Sequence(lambda n: n)
-    status = FuzzyChoice(choices=[Condition.UNKNOWN, Condition.NEW, Condition.OPEN_BOX, Condition.USED])
+    condition = FuzzyChoice(choices=[Condition.UNKNOWN, Condition.NEW, Condition.OPEN_BOX, Condition.USED])
+    # status = FuzzyChoice(choices=["UNKNOWN", "NEW", "OPEN_BOX", "USED"])
+

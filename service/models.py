@@ -38,7 +38,7 @@ class Product(db.Model):
     """
     __tablename__ = "products"
     __table_args__ = (
-        db.UniqueConstraint('product_id', 'status', name='unique_product_status'),
+        db.UniqueConstraint('product_id', 'condition', name='unique_product_condition'),
     )
     # Table Schema
     
@@ -49,7 +49,7 @@ class Product(db.Model):
     quantity = db.Column(db.Integer, default=0)
     # status = db.Column(db.Integer, default=Condition(0)) 
 
-    status = db.Column(db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)) 
+    condition = db.Column(db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)) 
     # def read_csv(self, file_path):
     #     """
     #     read data from csv to db table
@@ -99,7 +99,7 @@ class Product(db.Model):
             "product_id": self.product_id,
             "name": self.product_name, 
             "quantity":self.quantity, 
-            "status":self.status.name
+            "condition":self.condition.name
         }
 
     def deserialize(self, data):
@@ -110,10 +110,10 @@ class Product(db.Model):
             data (dict): A dictionary containing the resource data
         """
         try:
+            self.product_id = data["product_id"]
             self.product_name = data["name"]
             self.quantity = data["quantity"]
-            self.status = getattr(Condition, data["status"])
-            self.product_id = data["product_id"]
+            self.condition = getattr(Condition, data["condition"])
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Product: missing " + error.args[0]
@@ -170,11 +170,23 @@ class Product(db.Model):
         return cls.query.filter(cls.product_name == name)
 
     @classmethod
-    def find_by_name_and_status(cls, name, status):
+    def find_by_id(cls, id):
         """Returns all Products with the given name
 
         Args:
             name (string): the name of the Products you want to match
         """
-        logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.product_name == name, cls.status == status).first()
+        logger.info("Processing name query for %s ...", id)
+        return cls.query.filter(cls.product_id == id)
+
+    @classmethod
+    def find_by_id_and_condition(cls, id, condition):
+        """Returns all Products with the given name
+
+        Args:
+            name (string): the name of the Products you want to match
+        """
+        logger.info("Processing name query for %s ...", id)
+        if type(condition) != str:      
+            condition = condition.name
+        return cls.query.filter(cls.product_id == id, cls.condition == condition).first()

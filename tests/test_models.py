@@ -57,22 +57,24 @@ class TestProductModel(unittest.TestCase):
 
     def test_create_a_product(self):
         """Create a product and assert that it exists"""
-        product = Product(product_name="Green Apple", quantity=5, status=Condition.OPEN_BOX)
+        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, condition=Condition.OPEN_BOX)
         self.assertTrue(product is not None)
         self.assertEqual(product.id, None)
+        self.assertEqual(product.product_id, 10001)
         self.assertEqual(product.product_name, "Green Apple")
-        self.assertEqual(product.status, Condition.OPEN_BOX)
-        product = Product(product_name="Green Apple", quantity=5, status=Condition.UNKNOWN)
+        self.assertEqual(product.condition, Condition.OPEN_BOX)
+        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, condition=Condition.UNKNOWN)
         self.assertTrue(product is not None)
         self.assertEqual(product.id, None)
+        self.assertEqual(product.product_id, 10001)
         self.assertEqual(product.product_name, "Green Apple")
-        self.assertEqual(product.status, Condition.UNKNOWN)
+        self.assertEqual(product.condition, Condition.UNKNOWN)
 
     def test_add_a_product(self):
         """Create a Product and add it to the database"""
         products = Product.all()
         self.assertEqual(products, [])
-        product = Product(product_name="Green Apple", quantity=5, status=Condition.UNKNOWN)
+        product = Product(product_id = 10001, product_name="Green Apple", quantity=5, condition=Condition.UNKNOWN)
         self.assertTrue(product is not None)
         self.assertEqual(product.id, None)
         product.create()
@@ -89,23 +91,26 @@ class TestProductModel(unittest.TestCase):
         logging.debug(product)
         self.assertEqual(product.id, 1)
         # Change it an save it
+        product.product_id = 10001
         product.product_name = "apple"
         product.quantity = 100
-        product.status = Condition.UNKNOWN
+        product.condition = Condition.UNKNOWN
         original_id = product.id
         product.save()
         self.assertEqual(product.id, original_id)
+        self.assertEqual(product.product_id, 10001)
         self.assertEqual(product.product_name, "apple")
         self.assertEqual(product.quantity, 100)
-        self.assertEqual(product.status, Condition.UNKNOWN)
+        self.assertEqual(product.condition, Condition.UNKNOWN)
         # Fetch it back and make sure the id hasn't changed
         # but the data did change
         products = Product.all()
         self.assertEqual(len(products), 1)
         self.assertEqual(products[0].id, 1)
+        self.assertEqual(product.product_id, 10001)
         self.assertEqual(products[0].product_name, "apple")
         self.assertEqual(products[0].quantity, 100)
-        self.assertEqual(products[0].status, Condition.UNKNOWN)
+        self.assertEqual(products[0].condition, Condition.UNKNOWN)
 
     def test_update_empty_id(self):
         """Test update a Product without id"""
@@ -129,28 +134,32 @@ class TestProductModel(unittest.TestCase):
         self.assertNotEqual(data, None)
         self.assertIn("id", data)
         self.assertEqual(data["id"], product.id)
+        self.assertIn("product_id", data)
+        self.assertEqual(data["product_id"], product.product_id)
         self.assertIn("name", data)
         self.assertEqual(data["name"], product.product_name)
         self.assertIn("quantity", data)
         self.assertEqual(data["quantity"], product.quantity)
-        self.assertIn("status", data)
-        self.assertEqual(data["status"], product.status.name)
+        self.assertIn("condition", data)
+        self.assertEqual(data["condition"], product.condition.name)
 
     def test_deserialize_a_product(self):
         """Test deserialization of a Product"""
         data = {
             "id": 1,
+            "product_id": 10001,
             "name": "Apple",
             "quantity": 5,
-            "status": "NEW",
+            "condition": "NEW",
         }
         product = Product()
         product.deserialize(data)
         self.assertNotEqual(product, None)
         self.assertEqual(product.id, None)
+        self.assertEqual(product.product_id, 10001)
         self.assertEqual(product.product_name, "Apple")
         self.assertEqual(product.quantity, 5)
-        self.assertEqual(product.status, Condition.NEW)
+        self.assertEqual(product.condition, Condition.NEW)
 
 
     def test_deserialize_missing_data(self):
