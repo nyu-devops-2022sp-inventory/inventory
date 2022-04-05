@@ -113,7 +113,7 @@ def get_products_with_id(product_id):
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 ######################################################################
-# RETRIEVE A PRODUCT WITH PRODUCT ID AND STATUS
+# RETRIEVE A PRODUCT WITH PRODUCT ID AND CONDITION
 ######################################################################
 @app.route("/inventory/<int:product_id>/condition/<string:product_condition>", methods=["GET"])
 def get_products(product_id, product_condition):
@@ -145,7 +145,7 @@ def delete_products(product_id):
     return make_response('', status.HTTP_204_NO_CONTENT)
 
 ######################################################################
-# DELETE A PRODUCT WITH PRODUCT ID AND STATUS
+# DELETE A PRODUCT WITH PRODUCT ID AND CONDITION
 ######################################################################  
 @app.route('/inventory/<int:product_id>/condition/<string:product_condition>', methods=['DELETE'])
 def delete_products_with_id(product_id, product_condition):

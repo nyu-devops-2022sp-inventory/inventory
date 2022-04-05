@@ -24,7 +24,7 @@ class DataValidationError(Exception):
 
 
 class Condition(Enum):
-    """Enumeration of valid Product status"""
+    """Enumeration of valid Product Condition"""
 
     NEW = 0
     OPEN_BOX = 1
@@ -40,16 +40,17 @@ class Product(db.Model):
     __table_args__ = (
         db.UniqueConstraint('product_id', 'condition', name='unique_product_condition'),
     )
+    
     # Table Schema
     
-
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer)
     product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
-    # status = db.Column(db.Integer, default=Condition(0)) 
-
     condition = db.Column(db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)) 
+
+    # condition = db.Column(db.Integer, default=Condition(0)) 
+
     # def read_csv(self, file_path):
     #     """
     #     read data from csv to db table
@@ -57,7 +58,7 @@ class Product(db.Model):
     #     df = pd.read_csv(file_path)
     #     self.id = None
     #     for _, row in df.iterrows():
-    #         db.session.add(Product(product_name = str(row[1]), quantity =int(row[2]), status=int(row[3])))
+    #         db.session.add(Product(product_name = str(row[1]), quantity =int(row[2]), condition=int(row[3])))
     #         db.session.commit()
     #     logger.info("loading data from csv file successfully")
 
