@@ -30,7 +30,7 @@ def index():
     return (
         jsonify(
             name="Inventory REST API Service",
-            version="1.0",
+            version="1.1",
             list_path=url_for("list_products", _external=True),
             # update_path=url_for("update_product", _external=False),
 
@@ -52,23 +52,29 @@ def init_db():
 
 
 ######################################################################
-# QUERY PRODUCTS
+# QUERY PRODUCTS(EMPTY FILTER, PRODUCT_NAME, CONDITION)
 ######################################################################
 @app.route("/inventory", methods=["GET"])
 def list_products():
-    """Returns all of the Products"""
+    """Returns all of the eligible Products"""
     app.logger.info("Request for product list")
     products = []
-    name = request.args.get("name")
+    product_name = request.args.get("product_name")
     condition = request.args.get("condition")
-    if not name and not condition:
+    if not product_name and not condition:
         products = Product.all()
-    elif name:
-        products = Product.find_by_name(name)
+    elif product_name and condition:
+        products = Product.find_by_name_and_condition(product_name, condition)
+    elif product_name:
+        products = Product.find_by_name(product_name)
     elif condition:
         products = Product.find_by_condition(condition)
+
+    
     results = [product.serialize() for product in products]
     app.logger.info("Returning %d products", len(results))
+    if len(results) == 0:
+        raise NotFound("Eligible product was not found.")
     return make_response(jsonify(results), status.HTTP_200_OK)
   
 ######################################################################
@@ -86,7 +92,7 @@ def create_products():
         abort(status.HTTP_409_CONFLICT, 'product {} with condition {} already exist'.format(product.product_id, product.condition))
     product.create()
 
-    location_url = url_for("get_products", product_id=product.product_id, product_condition=product.condition.name, _external=True)
+    location_url = url_for("get_products_with_id", product_id=product.product_id, condition=[product.condition.name], _external=True)
 
     app.logger.info('Created Product with id: {}'.format(product.product_id))
     return make_response(
@@ -102,33 +108,57 @@ def create_products():
 def get_products_with_id(product_id):
     """
     Retrieve Product
-    This endpoint will return a Product based on it's id
+    This endpoint will return a Product based on it's id (or with its condition)
     """
-    app.logger.info("Request for product with id: %s", product_id)
+
+    # Check whether we have a condition in args(as query)
+    condition = request.args.get("condition")
     products = []
-    products = Product.find_by_id(product_id)
-    if not products:
-        raise NotFound("Product with id '{}' was not found.".format(product_id))
+    results = []
+    if not condition:
+        # For route with only product_id
+        app.logger.info("Request for product with id: %s", product_id)
+        products = Product.find_by_id(product_id)
+        if not products.first():
+            raise NotFound("Product with id '{}' was not found.".format(product_id))
+        else:
+            results = [product.serialize() for product in products]
+        app.logger.info("Returning product with id: %s", product_id)
     else:
-        results = [product.serialize() for product in products]
-    app.logger.info("Returning product: %s", product_id)
+        # For route with product_id and condition
+        app.logger.info("Request for product with id: %s and condition: %s", product_id, condition)
+        product = Product.find_by_id_and_condition(product_id, condition)
+        if not product:
+            raise NotFound('Product {} with condition {} was not found'.format(product_id, condition))
+        results.append(product.serialize())
+        app.logger.info("Returning product with id: %s and condition: %s", product_id, condition)
+    
+    # Discard after using Query to unify two situations
+    # 
+    # products = Product.find_by_id(product_id)
+    # if not products:
+    #     raise NotFound("Product with id '{}' was not found.".format(product_id))
+    # else:
+    #     results = [product.serialize() for product in products]
+    # app.logger.info("Returning product: %s", product_id)
+
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 ######################################################################
-# RETRIEVE A PRODUCT WITH PRODUCT ID AND CONDITION
+# RETRIEVE A PRODUCT WITH PRODUCT ID AND CONDITION (DISCARD)
 ######################################################################
-@app.route("/inventory/<int:product_id>/condition/<string:product_condition>", methods=["GET"])
-def get_products(product_id, product_condition):
-    """
-    Retrieve a single Product
-    This endpoint will return a Product based on it's id and it's condition
-    """
-    app.logger.info("Request for product with id: %s and condition: %s", product_id, product_condition)
-    product = Product.find_by_id_and_condition(product_id, product_condition)
-    if not product:
-        raise NotFound('Product {} with condition {} was not found'.format(product_id, product_condition))
-    app.logger.info("Returning product: %s", product_id)
-    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+# @app.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["GET"])
+# def get_products(product_id, condition):
+#     """
+#     Retrieve a single Product
+#     This endpoint will return a Product based on it's id and it's condition
+#     """
+#     app.logger.info("Request for product with id: %s and condition: %s", product_id, condition)
+#     product = Product.find_by_id_and_condition(product_id, condition)
+#     if not product:
+#         raise NotFound('Product {} with condition {} was not found'.format(product_id, condition))
+#     app.logger.info("Returning product: %s", product_id)
+#     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
 # DELETE A PRODUCT WITH PRODUCT ID
@@ -149,13 +179,13 @@ def delete_products(product_id):
 ######################################################################
 # DELETE A PRODUCT WITH PRODUCT ID AND CONDITION
 ######################################################################  
-@app.route('/inventory/<int:product_id>/condition/<string:product_condition>', methods=['DELETE'])
-def delete_products_with_id(product_id, product_condition):
+@app.route('/inventory/<int:product_id>/condition/<string:condition>', methods=['DELETE'])
+def delete_products_with_id(product_id, condition):
     """delete a product"""
-    app.logger.info('Request to delete Product with id: %s and condition: %s', product_id, product_condition)
-    product = Product.find_by_id_and_condition(product_id, product_condition)
+    app.logger.info('Request to delete Product with id: %s and condition: %s', product_id, condition)
+    product = Product.find_by_id_and_condition(product_id, condition)
     if not product:
-        raise NotFound('product {} with condition {} was not found'.format(product_id, product_condition))
+        raise NotFound('product {} with condition {} was not found'.format(product_id, condition))
     if product:
         product.delete()
     return make_response('', status.HTTP_204_NO_CONTENT)
@@ -163,14 +193,14 @@ def delete_products_with_id(product_id, product_condition):
 ######################################################################
 # UPDATE AN EXISTING PRODUCT
 ######################################################################
-@app.route('/inventory/<int:product_id>/condition/<string:product_condition>', methods=['PUT'])
-def update_products(product_id, product_condition):
+@app.route('/inventory/<int:product_id>/condition/<string:condition>', methods=['PUT'])
+def update_products(product_id, condition):
     """ Update the product """
-    app.logger.info('Request to update Product with id: %s and condition: %s', product_id, product_condition)
+    app.logger.info('Request to update Product with id: %s and condition: %s', product_id, condition)
     check_content_type("application/json")
-    product = Product.find_by_id_and_condition(product_id, product_condition)
+    product = Product.find_by_id_and_condition(product_id, condition)
     if not product:
-        raise NotFound('product {} with condition {} was not found'.format(product_id, product_condition))
+        raise NotFound('product {} with condition {} was not found'.format(product_id, condition))
     product.deserialize(request.json)
     #product.id = product_id
     product.save()

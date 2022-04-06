@@ -98,7 +98,7 @@ class Product(db.Model):
         return {
             "id": self.id, 
             "product_id": self.product_id,
-            "name": self.product_name, 
+            "product_name": self.product_name, 
             "quantity":self.quantity, 
             "condition":self.condition.name
         }
@@ -112,7 +112,7 @@ class Product(db.Model):
         """
         try:
             self.product_id = data["product_id"]
-            self.product_name = data["name"]
+            self.product_name = data["product_name"]
             self.quantity = data["quantity"]
             self.condition = getattr(Condition, data["condition"])
         except KeyError as error:
@@ -161,27 +161,27 @@ class Product(db.Model):
         return cls.query.get_or_404(by_id)
 
     @classmethod
-    def find_by_name(cls, name):
+    def find_by_name(cls, product_name):
         """Returns all Products with the given name
 
         Args:
             name (string): the name of the Products you want to match
         """
-        logger.info("Processing name query for %s ...", name)
-        return cls.query.filter(cls.product_name == name)
+        logger.info("Processing name query for %s ...", product_name)
+        return cls.query.filter(cls.product_name == product_name)
 
     @classmethod
-    def find_by_id(cls, id):
+    def find_by_id(cls, product_id):
         """Returns all Products with the given name
 
         Args:
             name (string): the name of the Products you want to match
         """
-        logger.info("Processing name query for %s ...", id)
-        return cls.query.filter(cls.product_id == id)
+        logger.info("Processing name query for %s ...", product_id)
+        return cls.query.filter(cls.product_id == product_id)
     @classmethod
     def find_by_condition(cls, condition):
-        """Returns all Products with the given contion
+        """Returns all Products with the given condition
 
         Args:
             condition (string): the condition of the Products you want to match
@@ -190,13 +190,25 @@ class Product(db.Model):
         return cls.query.filter(cls.condition == condition)
 
     @classmethod
-    def find_by_id_and_condition(cls, id, condition):
+    def find_by_id_and_condition(cls, product_id, condition):
         """Returns all Products with the given name
 
         Args:
             name (string): the name of the Products you want to match
         """
-        logger.info("Processing name query for %s ...", id)
+        logger.info("Processing name query for %s ...", product_id)
         if type(condition) != str:      
             condition = condition.name
-        return cls.query.filter(cls.product_id == id, cls.condition == condition).first()
+        return cls.query.filter(cls.product_id == product_id, cls.condition == condition).first()
+
+    @classmethod
+    def find_by_name_and_condition(cls, product_name, condition):
+        """Returns all Products with the given name
+
+        Args:
+            name (string): the name of the Products you want to match
+        """
+        logger.info("Processing name and condition query for %s and %s...", product_name, condition)
+        if type(condition) != str:      
+            condition = condition.name
+        return cls.query.filter(cls.product_name == product_name, cls.condition == condition)

@@ -13,7 +13,7 @@ class ProductFactory(factory.Factory):
         model = Product
 
     id = factory.Sequence(lambda n: n)
-    product_id = FuzzyInteger(10000, 10100)
+    product_id = FuzzyInteger(10000, 20000)
     product_name = factory.Faker("first_name")
     quantity = factory.Sequence(lambda n: n)
     condition = FuzzyChoice(choices=[Condition.UNKNOWN, Condition.NEW, Condition.OPEN_BOX, Condition.USED])
