@@ -2,6 +2,7 @@
 Test cases for Product Model
 
 """
+from itertools import count
 import logging
 from multiprocessing import Condition
 import unittest
@@ -136,8 +137,8 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(data["id"], product.id)
         self.assertIn("product_id", data)
         self.assertEqual(data["product_id"], product.product_id)
-        self.assertIn("name", data)
-        self.assertEqual(data["name"], product.product_name)
+        self.assertIn("product_name", data)
+        self.assertEqual(data["product_name"], product.product_name)
         self.assertIn("quantity", data)
         self.assertEqual(data["quantity"], product.quantity)
         self.assertIn("condition", data)
@@ -148,7 +149,7 @@ class TestProductModel(unittest.TestCase):
         data = {
             "id": 1,
             "product_id": 10001,
-            "name": "Apple",
+            "product_name": "Apple",
             "quantity": 5,
             "condition": "NEW",
         }
@@ -173,7 +174,17 @@ class TestProductModel(unittest.TestCase):
         data = "this is not a dictionary"
         product = Product()
         self.assertRaises(DataValidationError, product.deserialize, data)
+    def test_find(self):
+        """Find by id"""
+        products = ProductFactory.create_batch(3)
+        for product in products:
+            product.create()
 
+        product = product.find(products[1].id)
+        self.assertIsNot(product, None)
+        self.assertEqual(product.id, products[1].id)
+        self.assertEqual(product.product_name, products[1].product_name)
+        self.assertEqual(product.quantity, products[1].quantity)
 
     def test_find_or_404_found(self):
         """Find or return 404 found"""
@@ -184,9 +195,27 @@ class TestProductModel(unittest.TestCase):
         product = product.find_or_404(products[1].id)
         self.assertIsNot(product, None)
         self.assertEqual(product.id, products[1].id)
+        self.assertEqual(product.product_id, products[1].product_id)
         self.assertEqual(product.product_name, products[1].product_name)
         self.assertEqual(product.quantity, products[1].quantity)
 
-    def test_find_or_404_not_found(self):
-        """Find or return 404 NOT found"""
-        self.assertRaises(NotFound, Product.find_or_404, 0)
+    def test_find_by_id(self):
+        """Find by product id"""
+        products = ProductFactory.create_batch(3)
+        for product in products:
+            product.create()
+
+        product = product.find_by_id(products[1].product_id)
+        counter = 0
+        for temp_p in products:
+            if temp_p.product_id == products[1].product_id:
+                counter += 1
+
+        result = [my_product.serialize() for my_product in product]
+        print(result)
+        self.assertEqual(counter, len(result))
+        # self.assertIsNot(product, None)
+        # self.assertEqual(product.id, products[1].id)
+        # self.assertEqual(product.product_id, products[1].product_id)
+        # self.assertEqual(product.product_name, products[1].product_name)
+        # self.assertEqual(product.quantity, products[1].quantity)

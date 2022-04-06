@@ -85,7 +85,7 @@ class TestProductServer(TestCase):
         return products
 
     def test_get_product_list(self):
-        """Get a list of Products"""
+        """Get the list of Products"""
         self._create_products(5)
         resp = self.app.get(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
@@ -98,25 +98,26 @@ class TestProductServer(TestCase):
         test_name = products[0].product_name
         name_products = [product for product in products if product.product_name == test_name]
         resp = self.app.get(
-            BASE_URL, query_string="name={}".format(quote_plus(test_name))
+            BASE_URL, query_string="product_name={}".format(quote_plus(test_name))
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), len(name_products))
         # check the data just to be sure
         for product in data:
-            self.assertEqual(product["name"], test_name)
+            self.assertEqual(product["product_name"], test_name)
     
     def test_query_products_with_not_exist_name(self):
         """Query Products by non-exist name"""
         products = self._create_products(3)
         test_name = products[0].product_name + products[1].product_name + products[2].product_name
         resp = self.app.get(
-            BASE_URL, query_string="name={}".format(quote_plus(test_name))
+            BASE_URL, query_string="product_name={}".format(quote_plus(test_name))
         )
-        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
         data = resp.get_json()
-        self.assertEqual(len(data), 0)
+        # print(data)
+        # self.assertEqual(len(data), 0)
     
     def test_query_product_list_by_condition(self):
         """Query Products by condition"""
@@ -132,6 +133,7 @@ class TestProductServer(TestCase):
         # check the data just to be sure
         for product in data:
             self.assertEqual(product["condition"], test_condition)
+
     def test_query_products_with_not_exist_condition(self):
         """Query Products by non-exist condition"""
         products = self._create_products(3)
@@ -144,10 +146,31 @@ class TestProductServer(TestCase):
             print("successful")
             return
         self.assertFalse(True)
+
+    def test_query_product_list_by_name_and_condition(self):
+        """Query Products by name and condition"""
+        products = self._create_products(10)
+        test_name = products[0].product_name
+        test_condition = products[0].condition.name
+        name_products = [product for product in products if product.product_name == test_name]
+        name_condition_products = [product for product in name_products if product.condition.name == test_condition]
+        resp = self.app.get(
+            BASE_URL, query_string="product_name={}&condition={}".format(quote_plus(test_name),quote_plus(test_condition))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        print(products)
+        print(data)
+        print(name_condition_products)
+        self.assertEqual(len(data), len(name_condition_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["product_name"], test_name)
+            self.assertEqual(product["condition"], test_condition)
     
     def test_get_product_not_found(self):
         """Get a Product thats not found"""
-        resp = self.app.get("/products/0")
+        resp = self.app.get("/inventory/0")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_create_product(self):
@@ -163,19 +186,19 @@ class TestProductServer(TestCase):
         self.assertIsNotNone(location)
         # Check the data is correct
         new_product = resp.get_json()
-        self.assertEqual(new_product["name"], test_product.product_name, "Names do not match")
+        self.assertEqual(new_product["product_name"], test_product.product_name, "Names do not match")
         self.assertEqual(
             new_product["quantity"], test_product.quantity, "Quantity do not match"
         )
         # Check that the location header was correct
-        print(location)
         resp = self.app.get(location, content_type=CONTENT_TYPE_JSON)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_product = resp.get_json()
-        self.assertEqual(new_product["name"], test_product.product_name, "Names do not match")
-        self.assertEqual(
-            new_product["quantity"], test_product.quantity, "Quantity do not match"
-        )
+        for product in new_product:
+            self.assertEqual(product["product_name"], test_product.product_name, "Names do not match")
+            self.assertEqual(
+                product["quantity"], test_product.quantity, "Quantity do not match"
+            )
 
     def test_create_existing_product(self):
         """Create an existing Product"""
@@ -239,8 +262,17 @@ class TestProductServer(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_delete_product(self):
-        """Delete a Product"""
+    def test_delete_product_with_id(self):
+        """Delete a Product with product id"""
+        test_product = self._create_products(1)[0]
+        resp = self.app.delete(
+            "{0}/{1}".format(BASE_URL, test_product.product_id), content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(len(resp.data), 0)
+
+    def test_delete_product_with_id_and_condition(self):
+        """Delete a Product with product id and condition"""
         test_product = self._create_products(1)[0]
         resp = self.app.delete(
             "{0}/{1}/condition/{2}".format(BASE_URL, test_product.product_id, test_product.condition.name), content_type=CONTENT_TYPE_JSON
@@ -256,4 +288,18 @@ class TestProductServer(TestCase):
     def test_method_not_allowed(self):
         resp = self.app.put(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_get_products_with_id(self):
+        """Retrieve Products by product id"""
+        products = self._create_products(10)
+        test_id = products[0].product_id
+        id_products = [product for product in products if product.product_id == test_id]
+        resp = self.app.get(
+            BASE_URL+"/"+str(test_id))
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(id_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["product_id"], test_id)
     
