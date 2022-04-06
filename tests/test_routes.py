@@ -107,6 +107,44 @@ class TestProductServer(TestCase):
         for product in data:
             self.assertEqual(product["name"], test_name)
     
+    def test_query_products_with_not_exist_name(self):
+        """Query Products by non-exist name"""
+        products = self._create_products(3)
+        test_name = products[0].product_name + products[1].product_name + products[2].product_name
+        resp = self.app.get(
+            BASE_URL, query_string="name={}".format(quote_plus(test_name))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+    
+    def test_query_product_list_by_condition(self):
+        """Query Products by condition"""
+        products = self._create_products(10)
+        test_condition = products[0].condition.name
+        condition_products = [product for product in products if product.condition.name == test_condition]
+        resp = self.app.get(
+            BASE_URL, query_string="condition={}".format(quote_plus(test_condition))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), len(condition_products))
+        # check the data just to be sure
+        for product in data:
+            self.assertEqual(product["condition"], test_condition)
+    def test_query_products_with_not_exist_condition(self):
+        """Query Products by non-exist condition"""
+        products = self._create_products(3)
+        test_condition = "NEWOLD"
+        try:
+            resp = self.app.get(
+                BASE_URL, query_string="condition={}".format(quote_plus(test_condition))
+            )
+        except:
+            print("successful")
+            return
+        self.assertFalse(True)
+    
     def test_get_product_not_found(self):
         """Get a Product thats not found"""
         resp = self.app.get("/products/0")
@@ -218,3 +256,4 @@ class TestProductServer(TestCase):
     def test_method_not_allowed(self):
         resp = self.app.put(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    

@@ -179,6 +179,15 @@ class Product(db.Model):
         """
         logger.info("Processing name query for %s ...", id)
         return cls.query.filter(cls.product_id == id)
+    @classmethod
+    def find_by_condition(cls, condition):
+        """Returns all Products with the given contion
+
+        Args:
+            condition (string): the condition of the Products you want to match
+        """
+        logger.info("Processing condition query for %s ...", condition)
+        return cls.query.filter(cls.condition == condition)
 
     @classmethod
     def find_by_id_and_condition(cls, id, condition):

@@ -52,7 +52,7 @@ def init_db():
 
 
 ######################################################################
-# LIST ALL PRODUCTS
+# QUERY PRODUCTS
 ######################################################################
 @app.route("/inventory", methods=["GET"])
 def list_products():
@@ -60,11 +60,13 @@ def list_products():
     app.logger.info("Request for product list")
     products = []
     name = request.args.get("name")
-    if name:
-        products = Product.find_by_name(name)
-    else:
+    condition = request.args.get("condition")
+    if not name and not condition:
         products = Product.all()
-
+    elif name:
+        products = Product.find_by_name(name)
+    elif condition:
+        products = Product.find_by_condition(condition)
     results = [product.serialize() for product in products]
     app.logger.info("Returning %d products", len(results))
     return make_response(jsonify(results), status.HTTP_200_OK)
@@ -175,6 +177,7 @@ def update_products(product_id, product_condition):
 
     app.logger.info('Product with id {} updated.'.format(product_id))
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
