@@ -14,7 +14,8 @@ from werkzeug.exceptions import NotFound
 from service import status  # HTTP Status Codes
 from service.models import db, Product, init_db, Condition
 from service.routes import app
-from .factories import ProductFactory
+from .factories import ProductFactory, FuzzyInteger
+from factory import Faker
 
 # Disable all but critical errors during normal test run
 # uncomment for debugging failing tests
@@ -302,4 +303,189 @@ class TestProductServer(TestCase):
         # check the data just to be sure
         for product in data:
             self.assertEqual(product["product_id"], test_id)
+
+    def test_increase_product_inventory(self):
+        """Increase a product's inventory by a certain value"""
+        products = self._create_products(10)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = FuzzyInteger(0, 20000).fuzz()
+        resp = self.app.post(
+            "/inventory/{}/inc".format(test_id),
+            query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
+        )
+        # check if and only if the corresponding value gets updated
+        new_product = resp.get_json()
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(new_product["product_name"], test_product.product_name, "Name does not match")
+        self.assertEqual(
+            new_product["quantity"], test_product.quantity + test_value, "Quantity does not match"
+        )
+        self.assertEqual(new_product["id"], test_product.id, "ID does not match")
+        self.assertEqual(new_product["product_id"], test_id, "Product ID does not match")
+        self.assertEqual(new_product["condition"], test_condition, "Condition does not match")
+
+    def test_increase_product_inventory_empty_value(self):
+        """Increase a product's inventory with empty value"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        resp = self.app.post(
+            "/inventory/{}/inc".format(test_id),
+            query_string="condition={}&value=".format(quote_plus(test_condition))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_increase_product_inventory_not_an_integer(self):
+        """Test the input value not an integer"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = Faker("first_name")
+        resp = self.app.post(
+            "/inventory/{}/inc".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_increase_product_inventory_bad_value(self):
+        """Increase a product's inventory with empty value"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = FuzzyInteger(0, 20000).fuzz()
+        test_value = -test_value
+        resp = self.app.post(
+            "/inventory/{}/inc".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_increase_product_inventory_empty_condition(self):
+        """Increase a product's inventory with empty condition"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_value = FuzzyInteger(0, 20000).fuzz()
+        resp = self.app.post(
+            "/inventory/{}/inc".format(test_id),
+            query_string="condition=&value={}".format(test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_increase_product_inventory_not_found(self):
+        """Try to increase a product's inventory that doesn't exist in the database"""
+        test_product = ProductFactory()
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = FuzzyInteger(0, 20000).fuzz()
+        resp = self.app.post(
+            "/inventory/{}/inc".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
+
+    def test_decrease_product_inventory(self):
+        """Decrease a product's inventory by a certain value"""
+        products = self._create_products(10)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = FuzzyInteger(0, test_product.quantity).fuzz()
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
+        )
+        # check if and only if the corresponding value gets updated
+        new_product = resp.get_json()
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        self.assertEqual(new_product["product_name"], test_product.product_name, "Name does not match")
+        self.assertEqual(
+            new_product["quantity"], test_product.quantity - test_value, "Quantity does not match"
+        )
+        self.assertEqual(new_product["id"], test_product.id, "ID does not match")
+        self.assertEqual(new_product["product_id"], test_id, "Product ID does not match")
+        self.assertEqual(new_product["condition"], test_condition, "Condition does not match")
+
+    def test_decrease_product_inventory_empty_value(self):
+        """Decrease a product's inventory with empty value"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="condition={}&value=".format(quote_plus(test_condition))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_decrease_product_inventory_not_an_integer(self):
+        """Test the input value not an integer"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = Faker("first_name")
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_decrease_product_inventory_bad_value(self):
+        """Decrease a product's inventory with empty value"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = FuzzyInteger(0, test_product.quantity).fuzz()
+        test_value = -test_value
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+    
+    def test_decrease_product_inventory_empty_condition(self):
+        """Decrease a product's inventory with empty condition"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_value = FuzzyInteger(0, test_product.quantity).fuzz()
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="condition=&value={}".format(test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_decrease_product_inventory_not_found(self):
+        """Try to decrease a product's inventory that doesn't exist in the database"""
+        test_product = ProductFactory()
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = FuzzyInteger(0, test_product.quantity).fuzz()
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_decrease_product_inventory_value_too_big(self):
+        """Decrease a product's inventory with value larger than itself"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = FuzzyInteger(test_product.quantity + 0, test_product.quantity + 20000).fuzz()
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
     
