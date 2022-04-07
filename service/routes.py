@@ -208,6 +208,49 @@ def update_products(product_id, condition):
     app.logger.info('Product with id {} updated.'.format(product_id))
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
+######################################################################
+# INCREASE A PRODUCT'S INVENTORY ON DEDICATED CONDITION BY N
+######################################################################  
+@app.route('/inventory/<int:product_id>/inc', methods=['POST'])
+def increase_product_inventory(product_id):
+    """increase a product's inventory by a certain value"""
+    app.logger.info('Request to increase a product\'s inventory by a certain value with id: %s', product_id)
+    condition = request.args.get("condition")
+    value = request.args.get("value")
+    if not condition or not value:
+        abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
+    if int(value) < 0:
+        abort(status.HTTP_400_BAD_REQUEST, "'value should be non-negative")
+    product = Product.find_by_id_and_condition(product_id, condition)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
+    
+    product.quantity += int(value)
+    product.save()
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
+######################################################################
+# DECREASE A PRODUCT'S INVENTORY ON DEDICATED CONDITION BY N
+######################################################################  
+@app.route('/inventory/<int:product_id>/dec', methods=['POST'])
+def decrease_product_inventory(product_id):
+    """decrease a product's inventory by a certain value"""
+    app.logger.info('Request to decrease a product\'s inventory by a certain value with id: %s', product_id)
+    condition = request.args.get("condition")
+    value = request.args.get("value")
+    if not condition or not value:
+        abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
+    if int(value) < 0:
+        abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
+    product = Product.find_by_id_and_condition(product_id, condition)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
+    if int(value) > product.quantity:
+        abort(status.HTTP_403_FORBIDDEN, "Inventory decreased to negative prohibited.")
+    product.quantity -= int(value)
+    product.save()
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
