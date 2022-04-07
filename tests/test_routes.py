@@ -15,6 +15,7 @@ from service import status  # HTTP Status Codes
 from service.models import db, Product, init_db, Condition
 from service.routes import app
 from .factories import ProductFactory, FuzzyInteger
+from factory import Faker
 
 # Disable all but critical errors during normal test run
 # uncomment for debugging failing tests
@@ -337,6 +338,19 @@ class TestProductServer(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_increase_product_inventory_not_an_integer(self):
+        """Test the input value not an integer"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = Faker("first_name")
+        resp = self.app.post(
+            "/inventory/{}/inc".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_increase_product_inventory_bad_value(self):
         """Increase a product's inventory with empty value"""
         products = self._create_products(1)
@@ -408,6 +422,19 @@ class TestProductServer(TestCase):
         resp = self.app.post(
             "/inventory/{}/dec".format(test_id),
             query_string="condition={}&value=".format(quote_plus(test_condition))
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_decrease_product_inventory_not_an_integer(self):
+        """Test the input value not an integer"""
+        products = self._create_products(1)
+        test_product = products[0]
+        test_id = test_product.product_id
+        test_condition = test_product.condition.name
+        test_value = Faker("first_name")
+        resp = self.app.post(
+            "/inventory/{}/dec".format(test_id),
+            query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 

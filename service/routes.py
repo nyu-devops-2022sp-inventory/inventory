@@ -219,13 +219,17 @@ def increase_product_inventory(product_id):
     value = request.args.get("value")
     if not condition or not value:
         abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
-    if int(value) < 0:
+    try:
+        value_int = int(value)
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
+    if value_int < 0:
         abort(status.HTTP_400_BAD_REQUEST, "'value should be non-negative")
     product = Product.find_by_id_and_condition(product_id, condition)
     if not product:
         abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
     
-    product.quantity += int(value)
+    product.quantity += value_int
     product.save()
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
@@ -240,14 +244,18 @@ def decrease_product_inventory(product_id):
     value = request.args.get("value")
     if not condition or not value:
         abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
-    if int(value) < 0:
+    try:
+        value_int = int(value)
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
+    if value_int < 0:
         abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
     product = Product.find_by_id_and_condition(product_id, condition)
     if not product:
         abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
-    if int(value) > product.quantity:
+    if value_int > product.quantity:
         abort(status.HTTP_403_FORBIDDEN, "Inventory decreased to negative prohibited.")
-    product.quantity -= int(value)
+    product.quantity -= value_int
     product.save()
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
