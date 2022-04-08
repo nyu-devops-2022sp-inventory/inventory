@@ -115,7 +115,7 @@ class TestProductServer(TestCase):
         resp = self.app.get(
             BASE_URL, query_string="product_name={}".format(quote_plus(test_name))
         )
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         # print(data)
         # self.assertEqual(len(data), 0)

@@ -73,8 +73,8 @@ def list_products():
     
     results = [product.serialize() for product in products]
     app.logger.info("Returning %d products", len(results))
-    if len(results) == 0:
-        raise NotFound("Eligible product was not found.")
+    # if len(results) == 0:
+    #     raise NotFound("Eligible product was not found.")
     return make_response(jsonify(results), status.HTTP_200_OK)
   
 ######################################################################
