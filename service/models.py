@@ -3,6 +3,8 @@ Models for Product
 
 All of the models are stored in this module
 """
+import os
+import json
 import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -10,6 +12,16 @@ import pandas as pd
 from enum import Enum
 
 logger = logging.getLogger("flask.app")
+
+ADMIN_PARTY = os.environ.get("ADMIN_PARTY", "False").lower() == "true"
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "localhost")
+POSTGRES_USERNAME = os.environ.get("POSTGRES_USERNAME", "admin")
+POSTGRES_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "pass")
+
+# global variables for retry (must be int)
+RETRY_COUNT = int(os.environ.get("RETRY_COUNT", 10))
+RETRY_DELAY = int(os.environ.get("RETRY_DELAY", 1))
+RETRY_BACKOFF = int(os.environ.get("RETRY_BACKOFF", 2))
 
 # Create the SQLAlchemy object to be initialized later in init_db()
 db = SQLAlchemy()
@@ -140,7 +152,70 @@ class Product(db.Model):
         #q2 = db.session.query(Product).filter(Product.id==1).first()
         #print(q1)
         #print(q2)
+
+        """
+        Initialized Cloudant database connection
+        """
         
+        # opts = {}
+        # vcap_services = {}
+        # if "VCAP_SERVICES" in os.environ:
+        #     logger.info("Running in Bluemix mode.")
+        #     vcap_services = json.loads(os.environ["VCAP_SERVICES"])
+        # elif "BINDING_CLOUDANT" in os.environ:
+        #     logger.info("Found Kubernetes Bindings")
+        #     creds = json.loads(os.environ["BINDING_CLOUDANT"])
+        #     vcap_services = {"user-provided": [{"credentials": creds}]}
+        # else:
+        #     logger.info("VCAP_SERVICES and BINDING_CLOUDANT undefined.")
+        #     creds = {
+        #         "username": POSTGRES_USERNAME,
+        #         "password": POSTGRES_PASSWORD,
+        #         "host": POSTGRES_HOST,
+        #         "port": 5984,
+        #         "url": "http://" + POSTGRES_HOST + ":5984/",
+        #     }
+        #     vcap_services = {"user-provided": [{"credentials": creds}]}
+
+        # # Look for Cloudant in VCAP_SERVICES
+        # for service in vcap_services:
+        #     if service.startswith("user-provided"):
+        #         elephantsql_service = vcap_services[service][0]
+        #         opts["url"] = elephantsql_service["credentials"]["url"]
+
+        # if "url" not in opts:
+        #     logger.info(
+        #         "Error - Failed to retrieve options. "
+        #         "Check that app is bound to an ElephantSQL service."
+        #     )
+        #     exit(-1)
+
+        # logger.info("ElephantSQL Endpoint: %s", opts["url"])
+        # try:
+        #     if ADMIN_PARTY:
+        #         logger.info("Running in Admin Party Mode...")
+        #     client = Cloudant(
+        #         opts["username"],
+        #         opts["password"],
+        #         url=opts["url"],
+        #         connect=True,
+        #         auto_renew=True,
+        #         admin_party=ADMIN_PARTY,
+        #         adapter=Replay429Adapter(retries=10, initialBackoff=0.01),
+        #     )
+        # except ConnectionError:
+        #     raise AssertionError("Cloudant service could not be reached")
+
+        # # Create database if it doesn't exist
+        # try:
+        #     database = client[dbname]
+        # except KeyError:
+        #     # Create a database using an initialized client
+        #     database = client.create_database(dbname)
+        # # check for success
+        # if not database.exists():
+        #     raise AssertionError("Database [{}] could not be obtained".format(dbname))
+
 
     @classmethod
     def all(cls):

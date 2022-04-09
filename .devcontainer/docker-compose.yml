@@ -12,6 +12,7 @@ services:
     #   - 8000:8000
     volumes:
       - ..:/app
+      - ~/.bluemix/:/home/devops/.bluemix/
     command: sleep infinity
     environment:
       FLASK_APP: service:app
