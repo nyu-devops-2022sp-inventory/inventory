@@ -1,5 +1,6 @@
 # inventory
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://github.com/nyu-devops-2022sp-inventory/inventory/actions/workflows/tdd-tests.yml/badge.svg)](https://github.com/nyu-devops-2022sp-inventory/inventory/actions)
 
 This repository is for inventory group in NYU-DevOps-2022sp class
 
