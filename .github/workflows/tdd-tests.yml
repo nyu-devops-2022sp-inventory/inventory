@@ -53,7 +53,7 @@ jobs:
           GUNICORN_BIND: "0.0.0.0:8000"
           DATABASE_URI: postgresql://postgres:postgres@postgres:5432/postgres
 
-      # - name: Upload code coverage
-      #   uses: codecov/codecov-action@v2  
-      #   with:
-      #     version: "v0.1.13" 
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v2  
+        with:
+          version: "v0.1.13" 
