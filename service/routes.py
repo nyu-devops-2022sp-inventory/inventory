@@ -209,6 +209,30 @@ def update_products(product_id, condition):
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
+# UPDATE A PRODUCT'S INVENTORY WITH N
+######################################################################
+@app.route('/inventory/<int:product_id>/inc', methods=['POST'])  # todo : PUT?
+def update_product_inventory(product_id):
+    """update a product's inventory by a certain value"""
+    app.logger.info('Request to update a product\'s inventory with a certain value with id: %s', product_id)
+    condition = request.args.get("condition")
+    value = request.args.get("value")
+    if not condition or not value:
+        abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
+    try:
+        value_int = int(value)
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
+
+    product = Product.find_by_id_and_condition(product_id, condition)
+    if not product:
+        abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
+
+    product.quantity += value_int
+    product.save()
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+
+######################################################################
 # INCREASE A PRODUCT'S INVENTORY ON DEDICATED CONDITION BY N
 ######################################################################  
 @app.route('/inventory/<int:product_id>/inc', methods=['POST'])
