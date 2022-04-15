@@ -211,7 +211,7 @@ def update_products(product_id, condition):
 ######################################################################
 # UPDATE A PRODUCT'S INVENTORY WITH N
 ######################################################################
-@app.route('/inventory/<int:product_id>/inc', methods=['POST'])  # todo : PUT?
+@app.route('/inventory/<int:product_id>/update', methods=['POST'])
 def update_product_inventory(product_id):
     """update a product's inventory by a certain value"""
     app.logger.info('Request to update a product\'s inventory with a certain value with id: %s', product_id)
