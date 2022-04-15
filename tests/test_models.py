@@ -141,8 +141,13 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(data["product_name"], product.product_name)
         self.assertIn("quantity", data)
         self.assertEqual(data["quantity"], product.quantity)
+        self.assertIn("restock_level", data)
+        self.assertEqual(data["restock_level"], product.restock_level)
+        self.assertIn("reorder_amount", data)
+        self.assertEqual(data["reorder_amount"], product.reorder_amount)
         self.assertIn("condition", data)
         self.assertEqual(data["condition"], product.condition.name)
+        
 
     def test_deserialize_a_product(self):
         """Test deserialization of a Product"""
@@ -152,6 +157,8 @@ class TestProductModel(unittest.TestCase):
             "product_name": "Apple",
             "quantity": 5,
             "condition": "NEW",
+            "restock_level": 5,
+            "reorder_amount": 5,
         }
         product = Product()
         product.deserialize(data)
@@ -160,6 +167,8 @@ class TestProductModel(unittest.TestCase):
         self.assertEqual(product.product_id, 10001)
         self.assertEqual(product.product_name, "Apple")
         self.assertEqual(product.quantity, 5)
+        self.assertEqual(product.restock_level, 5)
+        self.assertEqual(product.reorder_amount, 5)
         self.assertEqual(product.condition, Condition.NEW)
 
 

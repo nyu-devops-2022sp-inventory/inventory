@@ -60,7 +60,8 @@ class Product(db.Model):
     product_name = db.Column(db.String(128), unique=False, nullable=False)
     quantity = db.Column(db.Integer, default=0)
     condition = db.Column(db.Enum(Condition), nullable=False, server_default=(Condition.UNKNOWN.name)) 
-
+    restock_level = db.Column(db.Integer, default=0)
+    reorder_amount = db.Column(db.Integer, default=0)
     # condition = db.Column(db.Integer, default=Condition(0)) 
 
     # def read_csv(self, file_path):
@@ -112,7 +113,9 @@ class Product(db.Model):
             "product_id": self.product_id,
             "product_name": self.product_name, 
             "quantity":self.quantity, 
-            "condition":self.condition.name
+            "condition":self.condition.name,
+            "restock_level":self.restock_level,
+            "reorder_amount":self.reorder_amount
         }
 
     def deserialize(self, data):
@@ -127,6 +130,8 @@ class Product(db.Model):
             self.product_name = data["product_name"]
             self.quantity = data["quantity"]
             self.condition = getattr(Condition, data["condition"])
+            self.restock_level = data["restock_level"]
+            self.reorder_amount = data["reorder_amount"]
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Product: missing " + error.args[0]
