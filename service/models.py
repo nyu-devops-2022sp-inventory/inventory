@@ -130,8 +130,10 @@ class Product(db.Model):
             self.product_name = data["product_name"]
             self.quantity = data["quantity"]
             self.condition = getattr(Condition, data["condition"])
-            self.restock_level = data["restock_level"]
-            self.reorder_amount = data["reorder_amount"]
+            if "restock_level" in data:
+                self.restock_level = data["restock_level"]
+            if "reorder_amount" in data:
+                self.reorder_amount = data["reorder_amount"]
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Product: missing " + error.args[0]
