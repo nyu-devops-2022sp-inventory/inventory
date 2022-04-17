@@ -27,16 +27,17 @@ from . import app
 def index():
     """ Root URL response """
     app.logger.info("Request for Root URL")
-    return (
-        jsonify(
-            name="Inventory REST API Service",
-            version="1.1",
-            list_path=url_for("list_products", _external=True),
-            # update_path=url_for("update_product", _external=False),
+    return app.send_static_file("index.html")
+    # return (
+    #     jsonify(
+    #         name="Inventory REST API Service",
+    #         version="1.1",
+    #         list_path=url_for("list_products", _external=True),
+    #         # update_path=url_for("update_product", _external=False),
 
-        ),
-        status.HTTP_200_OK,
-    )
+    #     ),
+    #     status.HTTP_200_OK,
+    # )
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
