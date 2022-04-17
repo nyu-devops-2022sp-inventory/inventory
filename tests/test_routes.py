@@ -251,7 +251,32 @@ class TestProductServer(TestCase):
         self.assertEqual(new_product["id"], updated_product["id"])
         self.assertEqual(new_product["quantity"], updated_product["quantity"])
         self.assertEqual(new_product["condition"], updated_product["condition"])
-
+    def test_update_product_quantity(self):
+        """Update an existing Product's quantity and need to restock"""
+        # create an product to update it's quantity with restock
+        test_product = ProductFactory()
+        test_product.restock_level = 10
+        test_product.reorder_amount = 10
+        test_product.condition = Condition.NEW
+        resp = self.app.post( # Create the product
+            BASE_URL, json=test_product.serialize(), content_type=CONTENT_TYPE_JSON
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        # update the product
+        new_product = resp.get_json()
+        print(new_product)
+        logging.debug(new_product)
+        new_product["quantity"] = 5
+        resp = self.app.put(
+            BASE_URL + "/{}/condition/{}".format(new_product["product_id"], new_product["condition"]),
+            json=new_product,
+            content_type=CONTENT_TYPE_JSON,
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        updated_product = resp.get_json()
+        self.assertEqual(new_product["id"], updated_product["id"])
+        self.assertEqual(updated_product["quantity"], 15)
+        self.assertEqual(new_product["condition"], updated_product["condition"])
     def test_update_product_not_found(self):
         """Update a non-existing Product"""
         # create an product without id to update

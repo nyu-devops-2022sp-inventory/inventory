@@ -87,6 +87,7 @@ def create_products():
     check_content_type("application/json")
     product = Product()
     product.deserialize(request.json)
+    
     find_product = Product.find_by_id_and_condition(product.product_id, product.condition)
     if find_product:
         abort(status.HTTP_409_CONFLICT, 'product {} with condition {} already exist'.format(product.product_id, product.condition))
@@ -202,6 +203,7 @@ def update_products(product_id, condition):
     if not product:
         raise NotFound('product {} with condition {} was not found'.format(product_id, condition))
     product.deserialize(request.json)
+    check_and_reorder_product(product)
     #product.id = product_id
     product.save()
 
@@ -229,6 +231,7 @@ def update_product_inventory(product_id):
         abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
 
     product.quantity += value_int
+    check_and_reorder_product(product)
     product.save()
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
@@ -254,6 +257,7 @@ def increase_product_inventory(product_id):
         abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
     
     product.quantity += value_int
+    check_and_reorder_product(product)
     product.save()
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
@@ -280,6 +284,7 @@ def decrease_product_inventory(product_id):
     if value_int > product.quantity:
         abort(status.HTTP_403_FORBIDDEN, "Inventory decreased to negative prohibited.")
     product.quantity -= value_int
+    check_and_reorder_product(product)
     product.save()
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
@@ -299,3 +304,11 @@ def check_content_type(media_type):
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
         "Content-Type must be {}".format(media_type),
     )
+
+
+def check_and_reorder_product(product):
+    """check if condition of product is new and the quantity of product is lower than the restock level, than reorder product
+    """
+    if product.condition.name == "NEW" and product.quantity < product.restock_level:
+        app.logger.info("restock product")
+        product.quantity += product.reorder_amount
