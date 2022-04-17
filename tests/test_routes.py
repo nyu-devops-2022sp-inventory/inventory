@@ -337,7 +337,7 @@ class TestProductServer(TestCase):
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
         resp = self.app.post(
-            "/inventory/{}/inc".format(test_id),
+            "/inventory/{}/update".format(test_id),
             query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
         )
         # check if and only if the corresponding value gets updated
@@ -358,7 +358,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         resp = self.app.post(
-            "/inventory/{}/inc".format(test_id),
+            "/inventory/{}/update".format(test_id),
             query_string="condition={}&value=".format(quote_plus(test_condition))
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
