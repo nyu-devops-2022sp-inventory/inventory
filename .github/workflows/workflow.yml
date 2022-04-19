@@ -64,14 +64,14 @@ jobs:
 
       - name: Running BDD with behave
         run: |
-          # gunicorn --log-level=critical --bind=0.0.0.0:8000 service:app &
-          # sleep 10
-          # curl -I http://localhost:8000/
+          gunicorn --log-level=critical --bind=127.0.0.1:8000 service:app &
+          sleep 10
+          curl -I http://localhost:8000/
           behave
-        env:
-          POSTGRES_HOST: postgres
-          POSTGRES_PORT: 5432
-          FLASK_APP: service:app
-          FLASK_ENV: development
-          GUNICORN_BIND: "0.0.0.0:8000"
-          DATABASE_URI: postgresql://postgres:postgres@postgres:5432/postgres
+        # env:
+        #   POSTGRES_HOST: postgres
+        #   POSTGRES_PORT: 5432
+        #   FLASK_APP: service:app
+        #   FLASK_ENV: development
+        #   GUNICORN_BIND: "0.0.0.0:8000"
+        #   DATABASE_URI: postgresql://postgres:postgres@postgres:5432/postgres
