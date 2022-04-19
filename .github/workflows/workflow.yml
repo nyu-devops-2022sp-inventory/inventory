@@ -20,19 +20,25 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres            
+          POSTGRES_PASSWORD: postgres        
+          POSTGRES_MULTIPLE_DATABASES: testdb    
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+    env:
+      DATABASE_URI: "postgres://postgres:postgres@postgres:5432/testdb"
+
     steps:
+      - name: Checkout
       - uses: actions/checkout@v2
 
-      - name: Install dependencies
+      - name: Install dependencies and packages
         run: |
           apt-get update
           apt-get install -y gcc libpq-dev
+          apt-get install -y curl wget python3-selenium
           python -m pip install --upgrade pip wheel
           pip install -r requirements.txt
 
@@ -60,7 +66,14 @@ jobs:
 
       - name: Running BDD with behave
         run: |
-          gunicorn --log-level=critical --bind=0.0.0.0:8000 service:app &
-          sleep 10
-          curl -I http://localhost:8000/
+          # gunicorn --log-level=critical --bind=0.0.0.0:8000 service:app &
+          # sleep 10
+          # curl -I http://localhost:8000/
           behave
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_PORT: 5432
+          FLASK_APP: service:app
+          FLASK_ENV: development
+          GUNICORN_BIND: "0.0.0.0:8000"
+          DATABASE_URI: postgresql://postgres:postgres@postgres:5432/postgres
