@@ -6,6 +6,7 @@ Describe what your service does here
 
 from math import prod
 import os
+from queue import Empty
 import sys
 import logging
 from flask import Flask, jsonify, request, url_for, make_response, abort
@@ -94,7 +95,7 @@ def create_products():
         abort(status.HTTP_409_CONFLICT, 'product {} with condition {} already exist'.format(product.product_id, product.condition))
     product.create()
 
-    location_url = url_for("get_products_with_id", product_id=product.product_id, condition=[product.condition.name], _external=True)
+    location_url = url_for("get_products", product_id=product.product_id, condition=[product.condition.name], _external=True)
 
     app.logger.info('Created Product with id: {}'.format(product.product_id))
     return make_response(
@@ -104,7 +105,7 @@ def create_products():
     )
   
 ######################################################################
-# RETRIEVE A PRODUCT WITH PRODUCT ID
+# SEARCH PRODUCT(S) WITH PRODUCT ID
 ######################################################################
 @app.route("/inventory/<int:product_id>", methods=["GET"])
 def get_products_with_id(product_id):
@@ -114,26 +115,17 @@ def get_products_with_id(product_id):
     """
 
     # Check whether we have a condition in args(as query)
-    condition = request.args.get("condition")
+    # condition = request.args.get("condition")
     products = []
     results = []
-    if not condition:
-        # For route with only product_id
-        app.logger.info("Request for product with id: %s", product_id)
-        products = Product.find_by_id(product_id)
-        if not products.first():
-            raise NotFound("Product with id '{}' was not found.".format(product_id))
-        else:
-            results = [product.serialize() for product in products]
-        app.logger.info("Returning product with id: %s", product_id)
+    # For route with only product_id
+    app.logger.info("Request for product with id: %s", product_id)
+    products = Product.find_by_id(product_id)
+    if not products.first():
+        raise NotFound("Product with id '{}' was not found.".format(product_id))
     else:
-        # For route with product_id and condition
-        app.logger.info("Request for product with id: %s and condition: %s", product_id, condition)
-        product = Product.find_by_id_and_condition(product_id, condition)
-        if not product:
-            raise NotFound('Product {} with condition {} was not found'.format(product_id, condition))
-        results.append(product.serialize())
-        app.logger.info("Returning product with id: %s and condition: %s", product_id, condition)
+        results = [product.serialize() for product in products]
+    app.logger.info("Returning product with id: %s", product_id)
     
     # Discard after using Query to unify two situations
     # 
@@ -147,20 +139,20 @@ def get_products_with_id(product_id):
     return make_response(jsonify(results), status.HTTP_200_OK)
 
 ######################################################################
-# RETRIEVE A PRODUCT WITH PRODUCT ID AND CONDITION (DISCARD)
+# RETRIEVE A PRODUCT WITH PRODUCT ID AND CONDITION
 ######################################################################
-# @app.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["GET"])
-# def get_products(product_id, condition):
-#     """
-#     Retrieve a single Product
-#     This endpoint will return a Product based on it's id and it's condition
-#     """
-#     app.logger.info("Request for product with id: %s and condition: %s", product_id, condition)
-#     product = Product.find_by_id_and_condition(product_id, condition)
-#     if not product:
-#         raise NotFound('Product {} with condition {} was not found'.format(product_id, condition))
-#     app.logger.info("Returning product: %s", product_id)
-#     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
+@app.route("/inventory/<int:product_id>/condition/<string:condition>", methods=["GET"])
+def get_products(product_id, condition):
+    """
+    Retrieve a single Product
+    This endpoint will return a Product based on it's id and it's condition
+    """
+    app.logger.info("Request for product with id: %s and condition: %s", product_id, condition)
+    product = Product.find_by_id_and_condition(product_id, condition)
+    if not product:
+        raise NotFound('Product {} with condition {} was not found'.format(product_id, condition))
+    app.logger.info("Returning product: %s", product_id)
+    return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
 
 ######################################################################
 # DELETE A PRODUCT WITH PRODUCT ID
@@ -171,7 +163,7 @@ def delete_products(product_id):
     app.logger.info('Request to delete Product with id: %s', product_id)
     products = []
     products = Product.find_by_id(product_id)
-    if not products:
+    if not products.first():
         raise NotFound("Product with id '{}' was not found.".format(product_id))
     else:
         for product in products:
@@ -179,7 +171,7 @@ def delete_products(product_id):
     return make_response('', status.HTTP_204_NO_CONTENT)
 
 ######################################################################
-# DELETE A PRODUCT WITH PRODUCT ID AND CONDITION
+# DELETE A PRODUCT WITH PRODUCT ID AND CONDITION (DISCARD)
 ######################################################################  
 @app.route('/inventory/<int:product_id>/condition/<string:condition>', methods=['DELETE'])
 def delete_products_with_id(product_id, condition):
@@ -202,7 +194,11 @@ def update_products(product_id, condition):
     check_content_type("application/json")
     product = Product.find_by_id_and_condition(product_id, condition)
     if not product:
-        raise NotFound('product {} with condition {} was not found'.format(product_id, condition))
+        abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
+    if product.product_name != request.json["product_name"]:
+        abort(status.HTTP_400_BAD_REQUEST, "Product Name Conflict") 
+    if str(product.product_id) != request.json["product_id"]:
+        abort(status.HTTP_400_BAD_REQUEST, "Product ID Conflict") 
     product.deserialize(request.json)
     check_and_reorder_product(product)
     #product.id = product_id
@@ -214,7 +210,7 @@ def update_products(product_id, condition):
 ######################################################################
 # UPDATE A PRODUCT'S INVENTORY WITH N
 ######################################################################
-@app.route('/inventory/<int:product_id>/update', methods=['POST'])
+@app.route('/inventory/<int:product_id>/update', methods=['PUT'])
 def update_product_inventory(product_id):
     """update a product's inventory by a certain value"""
     app.logger.info('Request to update a product\'s inventory with a certain value with id: %s', product_id)
@@ -231,7 +227,7 @@ def update_product_inventory(product_id):
     if not product:
         abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
 
-    product.quantity += value_int
+    product.quantity = value_int
     check_and_reorder_product(product)
     product.save()
     return make_response(jsonify(product.serialize()), status.HTTP_200_OK)
@@ -239,7 +235,7 @@ def update_product_inventory(product_id):
 ######################################################################
 # INCREASE A PRODUCT'S INVENTORY ON DEDICATED CONDITION BY N
 ######################################################################  
-@app.route('/inventory/<int:product_id>/inc', methods=['POST'])
+@app.route('/inventory/<int:product_id>/inc', methods=['PUT'])
 def increase_product_inventory(product_id):
     """increase a product's inventory by a certain value"""
     app.logger.info('Request to increase a product\'s inventory by a certain value with id: %s', product_id)
@@ -252,7 +248,7 @@ def increase_product_inventory(product_id):
     except ValueError:
         abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
     if value_int < 0:
-        abort(status.HTTP_400_BAD_REQUEST, "'value should be non-negative")
+        abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
     product = Product.find_by_id_and_condition(product_id, condition)
     if not product:
         abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
@@ -265,7 +261,7 @@ def increase_product_inventory(product_id):
 ######################################################################
 # DECREASE A PRODUCT'S INVENTORY ON DEDICATED CONDITION BY N
 ######################################################################  
-@app.route('/inventory/<int:product_id>/dec', methods=['POST'])
+@app.route('/inventory/<int:product_id>/dec', methods=['PUT'])
 def decrease_product_inventory(product_id):
     """decrease a product's inventory by a certain value"""
     app.logger.info('Request to decrease a product\'s inventory by a certain value with id: %s', product_id)

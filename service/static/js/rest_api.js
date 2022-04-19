@@ -76,99 +76,110 @@ $(function () {
     // Update a Pet
     // ****************************************
 
-    // $("#update-btn").click(function () {
+    $("#update-btn").click(function () {
 
-    //     let pet_id = $("#pet_id").val();
-    //     let name = $("#pet_name").val();
-    //     let category = $("#pet_category").val();
-    //     let available = $("#pet_available").val() == "true";
-    //     let gender = $("#pet_gender").val();
-    //     let birthday = $("#pet_birthday").val();
+        let product_id = $("#product_id").val();
+        let condition = $("#condition").val();
+        let product_name = $("#product_name").val();
+        let quantity = $("#quantity").val();
+        let restock_level = $("#restock_level").val();
+        let reorder_amount = $("#reorder_amount").val();
 
-    //     let data = {
-    //         "name": name,
-    //         "category": category,
-    //         "available": available,
-    //         "gender": gender,
-    //         "birthday": birthday
-    //     };
+        let data = {
+            "product_id":product_id,
+            "product_name":product_name,
+            "quantity":quantity,
+            "condition":condition,
+            "restock_level":restock_level,
+            "reorder_amount":reorder_amount
+        };
 
-    //     $("#flash_message").empty();
+        $("#flash_message").empty();
 
-    //     let ajax = $.ajax({
-    //             type: "PUT",
-    //             url: `/pets/${pet_id}`,
-    //             contentType: "application/json",
-    //             data: JSON.stringify(data)
-    //         })
+        let ajax = $.ajax({
+                type: "PUT",
+                url: `/inventory/${product_id}/condition/${condition}`,
+                contentType: "application/json",
+                data: JSON.stringify(data)
+            })
 
-    //     ajax.done(function(res){
-    //         update_form_data(res)
-    //         flash_message("Success")
-    //     });
+        ajax.done(function(res){
+            update_form_data(res)
+            flash_message("Success")
+        });
 
-    //     ajax.fail(function(res){
-    //         flash_message(res.responseJSON.message)
-    //     });
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
 
-    // });
+    });
 
     // ****************************************
     // Retrieve a Pet
     // ****************************************
 
-    // $("#retrieve-btn").click(function () {
+    $("#retrieve-btn").click(function () {
 
-    //     let pet_id = $("#pet_id").val();
+        let product_id = $("#product_id").val();
+        let condition = $("#condition").val();
 
-    //     $("#flash_message").empty();
+        $("#flash_message").empty();
 
-    //     let ajax = $.ajax({
-    //         type: "GET",
-    //         url: `/pets/${pet_id}`,
-    //         contentType: "application/json",
-    //         data: ''
-    //     })
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/inventory/${product_id}/condition/${condition}`,
+            contentType: "application/json",
+            data: ''
+        }) 
 
-    //     ajax.done(function(res){
-    //         //alert(res.toSource())
-    //         update_form_data(res)
-    //         flash_message("Success")
-    //     });
+        ajax.done(function(res){
+            update_form_data(res)
+            flash_message("Success")
+        });
 
-    //     ajax.fail(function(res){
-    //         clear_form_data()
-    //         flash_message(res.responseJSON.message)
-    //     });
+        ajax.fail(function(res){
+            clear_form_data()
+            flash_message(res.responseJSON.message)
+        });
 
-    // });
+    });
 
     // ****************************************
     // Delete a Pet
     // ****************************************
 
-    // $("#delete-btn").click(function () {
+    $("#delete-btn").click(function () {
 
-    //     let pet_id = $("#pet_id").val();
+        let product_id = $("#product_id").val();
+        let condition = $("#condition").val();
 
-    //     $("#flash_message").empty();
+        $("#flash_message").empty();
 
-    //     let ajax = $.ajax({
-    //         type: "DELETE",
-    //         url: `/pets/${pet_id}`,
-    //         contentType: "application/json",
-    //         data: '',
-    //     })
+        let queryString = ""
 
-    //     ajax.done(function(res){
-    //         clear_form_data()
-    //         flash_message("Pet has been Deleted!")
-    //     });
+        if(condition) {
+            queryString += product_id + "/condition/" + condition
+        }
+        else {
+            queryString += product_id
+        }
 
-    //     ajax.fail(function(res){
-    //         flash_message("Server error!")
-    //     });
-    // });
+        let ajax = $.ajax({
+            type: "DELETE",
+            url: `/inventory/${queryString}`,
+            contentType: "application/json",
+            data: '',
+        })
+
+        ajax.done(function(res){
+            clear_form_data()
+            flash_message("Product has been Deleted")
+        });
+
+        ajax.fail(function(res){
+            flash_message("Server error!")
+        });
+    });
 
     // ****************************************
     // Clear the form
@@ -213,7 +224,6 @@ $(function () {
         })
 
         ajax.done(function(res){
-            //alert(res.toSource())
             $("#search_results").empty();
             let table = '<table class="table table-striped" cellpadding="10">'
             table += '<thead><tr>'
@@ -224,22 +234,81 @@ $(function () {
             table += '<th class="col-md-2">restock_level</th>'
             table += '<th class="col-md-2">reorder_amount</th>'
             table += '</tr></thead><tbody>'
-            let firstProduct = "";
+            //let firstProduct = "";
             for(let i = 0; i < res.length; i++) {
                 let product = res[i];
                 table +=  `<tr id="row_${i}"><td>${product.product_id}</td><td>${product.product_name}</td><td>${product.condition}</td><td>${product.quantity}</td><td>${product.restock_level}</td><td>${product.reorder_amount}</td></tr>`;
-                if (i == 0) {
-                    firstProduct = product;
-                }
+                // if (i == 0) {
+                //     firstProduct = product;
+                // }
             }
             table += '</tbody></table>';
             $("#search_results").append(table);
 
             // copy the first result to the form
-            if (firstProduct != "") {
-                update_form_data(firstProduct)
-            }
+            // if (firstProduct != "") {
+            //     update_form_data(firstProduct)
+            // }
 
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
+
+    });
+
+    // ****************************************
+    // Increase the Quantity
+    // ****************************************
+
+    $("#increase-btn").click(function () {
+        let product_id = $("#product_id").val();
+        let condition = $("#condition").val();
+        let change_value = $("#change_value").val();
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+                type: "PUT",
+                url: `/inventory/${product_id}/inc?condition=${condition}&value=${change_value}`,
+                contentType: "application/json",
+                data: ''
+            })
+
+        ajax.done(function(res){
+            update_form_data(res)
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
+
+    });
+
+
+    // ****************************************
+    // Decrease the Quantity
+    // ****************************************
+
+    $("#decrease-btn").click(function () {
+        let product_id = $("#product_id").val();
+        let condition = $("#condition").val();
+        let change_value = $("#change_value").val();
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+                type: "PUT",
+                url: `/inventory/${product_id}/dec?condition=${condition}&value=${change_value}`,
+                contentType: "application/json",
+                data: ''
+            })
+
+        ajax.done(function(res){
+            update_form_data(res)
             flash_message("Success")
         });
 
