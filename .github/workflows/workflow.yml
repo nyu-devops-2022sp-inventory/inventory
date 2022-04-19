@@ -60,7 +60,7 @@ jobs:
 
       - name: Running BDD with behave
         run: |
-          gunicorn --log-level=critical --bind=127.0.0.1:8000 service:app &
+          gunicorn --log-level=critical --bind=0.0.0.0:8000 service:app &
           sleep 10
           curl -I http://localhost:8000/
           behave
