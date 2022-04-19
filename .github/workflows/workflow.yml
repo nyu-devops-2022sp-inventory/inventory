@@ -1,4 +1,4 @@
-name: TDD Tests
+name: CI Build
 
 on:
   push:
@@ -20,19 +20,23 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres            
+          POSTGRES_PASSWORD: postgres        
+          POSTGRES_MULTIPLE_DATABASES: testdb    
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-    steps:
-      - uses: actions/checkout@v2
 
-      - name: Install dependencies
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies and packages
         run: |
           apt-get update
           apt-get install -y gcc libpq-dev
+          apt-get install -y curl wget python3-selenium
           python -m pip install --upgrade pip wheel
           pip install -r requirements.txt
 
@@ -57,3 +61,17 @@ jobs:
         uses: codecov/codecov-action@v2  
         with:
           version: "v0.1.13" 
+
+      - name: Running BDD with behave
+        run: |
+          gunicorn --log-level=critical --bind=127.0.0.1:8000 service:app &
+          sleep 10
+          curl -I http://localhost:8000/
+          behave
+        # env:
+        #   POSTGRES_HOST: postgres
+        #   POSTGRES_PORT: 5432
+        #   FLASK_APP: service:app
+        #   FLASK_ENV: development
+        #   GUNICORN_BIND: "0.0.0.0:8000"
+        #   DATABASE_URI: postgresql://postgres:postgres@postgres:5432/postgres
