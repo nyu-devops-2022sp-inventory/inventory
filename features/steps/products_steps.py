@@ -17,7 +17,7 @@ def step_impl(context):
     context.resp = requests.get(context.base_url + '/inventory', headers=headers)
     expect(context.resp.status_code).to_equal(200)
     for product in context.resp.json():
-        context.resp = requests.delete(context.base_url + '/inventory/' + str(product["product_id"]), headers=headers)
+        context.resp = requests.delete(context.base_url + '/inventory/' + str(product["product_id"]) + '/condition/' + str(product["condition"]), headers=headers)
         expect(context.resp.status_code).to_equal(204)
     
     # load the database with new pets

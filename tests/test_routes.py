@@ -195,11 +195,10 @@ class TestProductServer(TestCase):
         resp = self.app.get(location, content_type=CONTENT_TYPE_JSON)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_product = resp.get_json()
-        for product in new_product:
-            self.assertEqual(product["product_name"], test_product.product_name, "Names do not match")
-            self.assertEqual(
-                product["quantity"], test_product.quantity, "Quantity do not match"
-            )
+        self.assertEqual(new_product["product_name"], test_product.product_name, "Names do not match")
+        self.assertEqual(
+            new_product["quantity"], test_product.quantity, "Quantity do not match"
+        )
 
     def test_create_existing_product(self):
         """Create an existing Product"""
@@ -336,7 +335,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/update".format(test_id),
             query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
         )
@@ -345,7 +344,7 @@ class TestProductServer(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         self.assertEqual(new_product["product_name"], test_product.product_name, "Name does not match")
         self.assertEqual(
-            new_product["quantity"], test_product.quantity + test_value, "Quantity does not match"
+            new_product["quantity"], test_value, "Quantity does not match"
         )
         self.assertEqual(new_product["id"], test_product.id, "ID does not match")
         self.assertEqual(new_product["product_id"], test_id, "Product ID does not match")
@@ -357,7 +356,7 @@ class TestProductServer(TestCase):
         test_product = products[0]
         test_id = test_product.product_id
         test_condition = test_product.condition.name
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/update".format(test_id),
             query_string="condition={}&value=".format(quote_plus(test_condition))
         )
@@ -370,7 +369,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = Faker("first_name")
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -382,7 +381,7 @@ class TestProductServer(TestCase):
         test_product = products[0]
         test_id = test_product.product_id
         test_value = FuzzyInteger(0, 20000).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition=&value={}".format(test_value)
         )
@@ -394,7 +393,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -407,7 +406,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
         )
@@ -428,7 +427,7 @@ class TestProductServer(TestCase):
         test_product = products[0]
         test_id = test_product.product_id
         test_condition = test_product.condition.name
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition={}&value=".format(quote_plus(test_condition))
         )
@@ -441,7 +440,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = Faker("first_name")
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -455,7 +454,7 @@ class TestProductServer(TestCase):
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
         test_value = -test_value
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -467,7 +466,7 @@ class TestProductServer(TestCase):
         test_product = products[0]
         test_id = test_product.product_id
         test_value = FuzzyInteger(0, 20000).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition=&value={}".format(test_value)
         )
@@ -479,7 +478,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -494,7 +493,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, test_product.quantity).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/dec".format(test_id),
             query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
         )
@@ -515,7 +514,7 @@ class TestProductServer(TestCase):
         test_product = products[0]
         test_id = test_product.product_id
         test_condition = test_product.condition.name
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/dec".format(test_id),
             query_string="condition={}&value=".format(quote_plus(test_condition))
         )
@@ -528,7 +527,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = Faker("first_name")
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/dec".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -542,7 +541,7 @@ class TestProductServer(TestCase):
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, test_product.quantity).fuzz()
         test_value = -test_value
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/dec".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -554,7 +553,7 @@ class TestProductServer(TestCase):
         test_product = products[0]
         test_id = test_product.product_id
         test_value = FuzzyInteger(0, test_product.quantity).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/dec".format(test_id),
             query_string="condition=&value={}".format(test_value)
         )
@@ -566,7 +565,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, test_product.quantity).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/dec".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
@@ -579,7 +578,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(test_product.quantity + 0, test_product.quantity + 20000).fuzz()
-        resp = self.app.post(
+        resp = self.app.put(
             "/inventory/{}/dec".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
