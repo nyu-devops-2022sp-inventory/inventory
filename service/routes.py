@@ -197,7 +197,7 @@ def update_products(product_id, condition):
         abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
     if product.product_name != request.json["product_name"]:
         abort(status.HTTP_400_BAD_REQUEST, "Product Name Conflict") 
-    if str(product.product_id) != request.json["product_id"]:
+    if str(product.product_id) != str(request.json["product_id"]):
         abort(status.HTTP_400_BAD_REQUEST, "Product ID Conflict") 
     product.deserialize(request.json)
     check_and_reorder_product(product)
