@@ -250,6 +250,7 @@ class TestProductServer(TestCase):
         self.assertEqual(new_product["id"], updated_product["id"])
         self.assertEqual(new_product["quantity"], updated_product["quantity"])
         self.assertEqual(new_product["condition"], updated_product["condition"])
+
     def test_update_product_quantity(self):
         """Update an existing Product's quantity and need to restock"""
         # create an product to update it's quantity with restock
@@ -276,6 +277,7 @@ class TestProductServer(TestCase):
         self.assertEqual(new_product["id"], updated_product["id"])
         self.assertEqual(updated_product["quantity"], 15)
         self.assertEqual(new_product["condition"], updated_product["condition"])
+
     def test_update_product_not_found(self):
         """Update a non-existing Product"""
         # create an product without id to update
