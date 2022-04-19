@@ -1,4 +1,4 @@
-name: TDD Tests
+name: CI Build
 
 on:
   push:
@@ -57,3 +57,10 @@ jobs:
         uses: codecov/codecov-action@v2  
         with:
           version: "v0.1.13" 
+
+      - name: Running BDD with behave
+        run: |
+          gunicorn --log-level=critical --bind=127.0.0.1:8000 service:app &
+          sleep 10
+          curl -I http://localhost:8000/
+          behave
