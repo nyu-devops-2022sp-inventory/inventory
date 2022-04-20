@@ -23,7 +23,7 @@ from factory import Faker
 
 # DATABASE_URI = os.getenv('DATABASE_URI', 'sqlite:///../db/test.db')
 DATABASE_URI = os.getenv(
-    "TEST_DATABASE_URI", "postgresql://postgres:postgres@postgres:5432/testdb"
+    "DATABASE_URI", "postgresql://postgres:postgres@postgres:5432/testdb"
 )
 BASE_URL = "/inventory"
 CONTENT_TYPE_JSON = "application/json"
