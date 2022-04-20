@@ -15,7 +15,7 @@ from werkzeug.exceptions import NotFound
 from .factories import ProductFactory
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql://postgres:postgres@postgres:5432/testdb"
+    "TEST_DATABASE_URI", "postgresql://postgres:postgres@postgres:5432/testdb"
 )
 
 ######################################################################
