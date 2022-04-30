@@ -192,7 +192,9 @@ class TestProductServer(TestCase):
             new_product["quantity"], test_product.quantity, "Quantity do not match"
         )
         # Check that the location header was correct
-        resp = self.app.get(location, content_type=CONTENT_TYPE_JSON)
+        resp = self.app.get(location)
+        print(test_product.condition)
+        print(location)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         new_product = resp.get_json()
         self.assertEqual(new_product["product_name"], test_product.product_name, "Names do not match")
@@ -241,7 +243,7 @@ class TestProductServer(TestCase):
         logging.debug(new_product)
         new_product["quantity"] = 50
         resp = self.app.put(
-            BASE_URL + "/{}/condition/{}".format(new_product["product_id"], new_product["condition"]),
+            BASE_URL + "/{}?condition={}".format(new_product["product_id"], new_product["condition"]),
             json=new_product,
             content_type=CONTENT_TYPE_JSON,
         )
@@ -268,7 +270,7 @@ class TestProductServer(TestCase):
         logging.debug(new_product)
         new_product["quantity"] = 5
         resp = self.app.put(
-            BASE_URL + "/{}/condition/{}".format(new_product["product_id"], new_product["condition"]),
+            BASE_URL + "/{}?condition={}".format(new_product["product_id"], new_product["condition"]),
             json=new_product,
             content_type=CONTENT_TYPE_JSON,
         )
@@ -302,7 +304,7 @@ class TestProductServer(TestCase):
         """Delete a Product with product id and condition"""
         test_product = self._create_products(1)[0]
         resp = self.app.delete(
-            "{0}/{1}/condition/{2}".format(BASE_URL, test_product.product_id, test_product.condition.name), content_type=CONTENT_TYPE_JSON
+            "{0}/{1}?condition={2}".format(BASE_URL, test_product.product_id, test_product.condition.name), content_type=CONTENT_TYPE_JSON
         )
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(resp.data), 0)
@@ -337,6 +339,8 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
+        print("/inventory/{}/update".format(test_id))
+        print("value={}&condition={}".format(test_value, quote_plus(test_condition)))
         resp = self.app.put(
             "/inventory/{}/update".format(test_id),
             query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
@@ -348,7 +352,7 @@ class TestProductServer(TestCase):
         self.assertEqual(
             new_product["quantity"], test_value, "Quantity does not match"
         )
-        self.assertEqual(new_product["id"], test_product.id, "ID does not match")
+        # self.assertEqual(new_product["id"], test_product.id, "ID does not match")
         self.assertEqual(new_product["product_id"], test_id, "Product ID does not match")
         self.assertEqual(new_product["condition"], test_condition, "Condition does not match")
 
@@ -408,6 +412,8 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
+        print("/inventory/{}/inc".format(test_id))
+        print("value={}&condition={}".format(test_value, quote_plus(test_condition)))
         resp = self.app.put(
             "/inventory/{}/inc".format(test_id),
             query_string="value={}&condition={}".format(test_value, quote_plus(test_condition))
@@ -419,7 +425,7 @@ class TestProductServer(TestCase):
         self.assertEqual(
             new_product["quantity"], test_product.quantity + test_value, "Quantity does not match"
         )
-        self.assertEqual(new_product["id"], test_product.id, "ID does not match")
+        # self.assertEqual(new_product["id"], test_product.id, "ID does not match")
         self.assertEqual(new_product["product_id"], test_id, "Product ID does not match")
         self.assertEqual(new_product["condition"], test_condition, "Condition does not match")
 
@@ -506,7 +512,7 @@ class TestProductServer(TestCase):
         self.assertEqual(
             new_product["quantity"], test_product.quantity - test_value, "Quantity does not match"
         )
-        self.assertEqual(new_product["id"], test_product.id, "ID does not match")
+        # self.assertEqual(new_product["id"], test_product.id, "ID does not match")
         self.assertEqual(new_product["product_id"], test_id, "Product ID does not match")
         self.assertEqual(new_product["condition"], test_condition, "Condition does not match")
 

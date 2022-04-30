@@ -98,7 +98,7 @@ $(function () {
 
         let ajax = $.ajax({
                 type: "PUT",
-                url: `/inventory/${product_id}/condition/${condition}`,
+                url: `/inventory/${product_id}?condition=${condition}`,
                 contentType: "application/json",
                 data: JSON.stringify(data)
             })
@@ -123,13 +123,21 @@ $(function () {
         let product_id = $("#product_id").val();
         let condition = $("#condition").val();
 
+        let queryString = ""
+
         $("#flash_message").empty();
+
+        if(!product_id || !condition) {
+            flash_message("require product ID and Condition")
+            exit()
+        }
+        else{
+            queryString += product_id + "?condition=" + condition
+        }
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/inventory/${product_id}/condition/${condition}`,
-            contentType: "application/json",
-            data: ''
+            url: `/inventory/${queryString}`
         }) 
 
         ajax.done(function(res){
@@ -151,24 +159,21 @@ $(function () {
     $("#delete-btn").click(function () {
 
         let product_id = $("#product_id").val();
-        let condition = $("#condition").val();
+        // let condition = $("#condition").val();
 
         $("#flash_message").empty();
 
         let queryString = ""
 
-        if(condition) {
-            queryString += product_id + "/condition/" + condition
-        }
-        else {
-            queryString += product_id
-        }
+        // if(condition) {
+        //     queryString += product_id + "/condition/" + condition
+        // }
+        
+        queryString += product_id
 
         let ajax = $.ajax({
             type: "DELETE",
             url: `/inventory/${queryString}`,
-            contentType: "application/json",
-            data: '',
         })
 
         ajax.done(function(res){
@@ -197,30 +202,37 @@ $(function () {
 
     $("#search-btn").click(function () {
 
-        // let product_id = $("#product_id").val();
+        let product_id = $("#product_id").val();
         let condition = $("#condition").val();
         let product_name = $("#product_name").val();
 
-        let queryString = ""
+        let queryString = "?"
 
-        if (product_name) {
-            queryString += 'product_name=' + product_name
-        }
-        if (condition) {
-            if (queryString.length > 0) {
-                queryString += '&condition=' + condition
-            } else {
-                queryString += 'condition=' + condition
+        if (product_id){
+            queryString = '/' + product_id
+            if(condition){
+                queryString += '?condition=' + condition
             }
         }
+        else{
+            if (product_name) {
+                queryString += 'product_name=' + product_name
+            }
+            if (condition) {
+                if (queryString.length > 0) {
+                    queryString += '&condition=' + condition
+                } else {
+                    queryString += 'condition=' + condition
+                }
+            }
+        }
+
 
         $("#flash_message").empty();
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/inventory?${queryString}`,
-            contentType: "application/json",
-            data: ''
+            url: `/inventory${queryString}`,
         })
 
         ajax.done(function(res){
@@ -235,13 +247,21 @@ $(function () {
             table += '<th class="col-md-2">reorder_amount</th>'
             table += '</tr></thead><tbody>'
             //let firstProduct = "";
-            for(let i = 0; i < res.length; i++) {
-                let product = res[i];
-                table +=  `<tr id="row_${i}"><td>${product.product_id}</td><td>${product.product_name}</td><td>${product.condition}</td><td>${product.quantity}</td><td>${product.restock_level}</td><td>${product.reorder_amount}</td></tr>`;
-                // if (i == 0) {
-                //     firstProduct = product;
-                // }
+            if (product_id && condition){
+                let product = res;
+                table +=  `<tr id="row_${0}"><td>${product.product_id}</td><td>${product.product_name}</td><td>${product.condition}</td><td>${product.quantity}</td><td>${product.restock_level}</td><td>${product.reorder_amount}</td></tr>`;
+                    
             }
+            else{
+                for(let i = 0; i < res.length; i++) {
+                    let product = res[i];
+                    table +=  `<tr id="row_${i}"><td>${product.product_id}</td><td>${product.product_name}</td><td>${product.condition}</td><td>${product.quantity}</td><td>${product.restock_level}</td><td>${product.reorder_amount}</td></tr>`;
+                    // if (i == 0) {
+                    //     firstProduct = product;
+                    // }
+                }
+            }
+            
             table += '</tbody></table>';
             $("#search_results").append(table);
 
@@ -249,8 +269,16 @@ $(function () {
             // if (firstProduct != "") {
             //     update_form_data(firstProduct)
             // }
-
-            flash_message("Success")
+            if (product_id && condition){
+                flash_message("Success (Based on product id and condition)")
+            }
+            else if (product_id){
+                flash_message("Success (Based on product id)")
+            }
+            else{
+                flash_message("Success")
+            }
+            
         });
 
         ajax.fail(function(res){
@@ -273,8 +301,6 @@ $(function () {
         let ajax = $.ajax({
                 type: "PUT",
                 url: `/inventory/${product_id}/inc?condition=${condition}&value=${change_value}`,
-                contentType: "application/json",
-                data: ''
             })
 
         ajax.done(function(res){
@@ -303,8 +329,34 @@ $(function () {
         let ajax = $.ajax({
                 type: "PUT",
                 url: `/inventory/${product_id}/dec?condition=${condition}&value=${change_value}`,
-                contentType: "application/json",
-                data: ''
+            })
+
+        ajax.done(function(res){
+            update_form_data(res)
+            flash_message("Success")
+        });
+
+        ajax.fail(function(res){
+            flash_message(res.responseJSON.message)
+        });
+
+    });
+
+
+    // ****************************************
+    // Set the Quantity
+    // ****************************************
+
+    $("#set-btn").click(function () {
+        let product_id = $("#product_id").val();
+        let condition = $("#condition").val();
+        let change_value = $("#change_value").val();
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+                type: "PUT",
+                url: `/inventory/${product_id}/update?condition=${condition}&value=${change_value}`,
             })
 
         ajax.done(function(res){

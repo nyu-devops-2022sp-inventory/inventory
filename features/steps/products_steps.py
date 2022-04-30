@@ -14,11 +14,16 @@ def step_impl(context):
     """ Delete all Pets and load new ones """
     headers = {'Content-Type': 'application/json'}
     # list all of the pets and delete them one by one
-    context.resp = requests.get(context.base_url + '/inventory', headers=headers)
+    context.resp = requests.get(context.base_url + '/inventory')
     expect(context.resp.status_code).to_equal(200)
+    id_counter = set()
     for product in context.resp.json():
-        context.resp = requests.delete(context.base_url + '/inventory/' + str(product["product_id"]) + '/condition/' + str(product["condition"]), headers=headers)
-        expect(context.resp.status_code).to_equal(204)
+        context.resp = requests.delete(context.base_url + '/inventory/' + str(product["product_id"]))
+        if product["product_id"] not in id_counter:
+            id_counter.add(product["product_id"])
+            expect(context.resp.status_code).to_equal(204)
+        else:
+            expect(context.resp.status_code).to_equal(404)
     
     # load the database with new pets
     create_url = context.base_url + '/inventory'
