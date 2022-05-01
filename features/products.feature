@@ -111,7 +111,7 @@ Scenario: Update a Product:
     And I select "New" in the "Condition" dropdown
     And I set the "Product Name" to "tapple"
     And I press the "Update" button
-    Then I should see the message "400 Bad Request: Product Name Conflict"
+    Then I should see the message "Product Name Conflict"
     When I press the "Clear" button
     Then the "Product ID" field should be empty
     And the "Condition" field should be empty
@@ -135,7 +135,7 @@ Scenario: Increase a Product's Quantity:
     And I should see "25" in the "Quantity" field
     When I set the "Change Value" to "-5"
     And I press the "Increase" button
-    Then I should see the message "400 Bad Request: 'value' should be non-negative"
+    Then I should see the message "'value' should be non-negative"
 
 Scenario: Increase a Product's Quantity:
     When I visit the "Home Page"
@@ -147,4 +147,4 @@ Scenario: Increase a Product's Quantity:
     And I should see "15" in the "Quantity" field
     When I set the "Change Value" to "-5"
     And I press the "Decrease" button
-    Then I should see the message "400 Bad Request: 'value' should be non-negative"
+    Then I should see the message "'value' should be non-negative"

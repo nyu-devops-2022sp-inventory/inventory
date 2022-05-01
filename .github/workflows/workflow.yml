@@ -64,9 +64,9 @@ jobs:
 
       - name: Running BDD with behave
         run: |
-          gunicorn --log-level=critical --bind=127.0.0.1:8000 service:app &
+          gunicorn --log-level=critical --bind=127.0.0.1:8080 service:app &
           sleep 10
-          curl -I http://localhost:8000/
+          curl -I http://localhost:8080/
           behave
         # env:
         #   POSTGRES_HOST: postgres
