@@ -232,7 +232,7 @@ class ProductCollection(Resource):
     """ Handles all interactions with collections of Products """
 
     #------------------------------------------------------------------
-    # LIST ALL PRODUCTS
+    # LIST ALL PRODUCTS (ALL or with query parameters)
     #------------------------------------------------------------------
     @api.doc('list_products')
     @api.expect(product_args, validate=True)
