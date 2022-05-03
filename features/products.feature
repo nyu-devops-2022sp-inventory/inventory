@@ -96,14 +96,6 @@ Scenario: Delete a Product
     Then I should not see "10001", "apple" and "USED" in the results
     And I should not see "10001", "apple" and "NEW" in the results
     And I should see "10002", "banana" and "NEW" in the results
-    When I set the "Product ID" to "10002"
-    And I select "New" in the "Condition" dropdown
-    And I press the "Delete" button
-    Then I should see the message "Product has been Deleted"
-    And the "Product ID" field should be empty
-    And the "Condition" field should be empty
-    When I press the "Search" button
-    Then I should not see "10002", "banana" and "NEW" in the results
 
 Scenario: Update a Product:
     When I visit the "Home Page"
