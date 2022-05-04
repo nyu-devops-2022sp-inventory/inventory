@@ -142,6 +142,10 @@ class Product(db.Model):
             raise DataValidationError(
                 "Invalid Product: body of request contained bad or no data " + str(error)
             )
+        except AttributeError as error:
+            raise DataValidationError(
+                "Invalid Product: the condition is invalid: " + str(error)
+            )
         return self
 
     @classmethod

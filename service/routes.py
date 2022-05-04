@@ -166,6 +166,8 @@ class ProductResource(Resource):
             app.logger.info("Returning product with id: %s", product_id)
         else:
             app.logger.info("Request for product with id: %s and condition: %s", product_id, condition)
+            if condition not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
             product = Product.find_by_id_and_condition(product_id, condition)
             if not product:
                 abort(status.HTTP_404_NOT_FOUND, "Product with id '{}' was not found.".format(product_id))
@@ -190,6 +192,8 @@ class ProductResource(Resource):
 
         app.logger.info('Request to update Product with id: %s and condition: %s', product_id, condition)
         check_content_type("application/json")
+        if condition not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+            abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, condition)
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
@@ -245,10 +249,14 @@ class ProductCollection(Resource):
         if not args["product_name"] and not args["condition"]:
             products = Product.all()
         elif args["product_name"] and args["condition"]:
+            if args["condition"] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
             products = Product.find_by_name_and_condition(args["product_name"], args["condition"])
         elif args["product_name"]:
             products = Product.find_by_name(args["product_name"])
         elif args["condition"]:
+            if args["condition"] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
             products = Product.find_by_condition(args["condition"])
 
         
@@ -308,6 +316,8 @@ class IncreaseResource(Resource):
             abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
         if value_int < 0:
             abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
+        if args['condition'] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+            abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, args['condition'])
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, args['condition']))
@@ -345,6 +355,8 @@ class DecreaseResource(Resource):
             abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
         if value_int < 0:
             abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
+        if condition not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+            abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, condition)
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
@@ -380,6 +392,8 @@ class UpdateResource(Resource):
             abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
         if value_int < 0:
             abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
+        if args['condition'] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, args['condition'])
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, args['condition']))
