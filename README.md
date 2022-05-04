@@ -65,16 +65,16 @@ This is particularly useful because it reports the line numbers for the code tha
 To start the service simply use:
 
 ```shell
-$ flask run
+$ honcho start
 ```
 
-You should be able to reach the service at: http://localhost:8000. The port that is used is controlled by an environment variable defined in the `.flaskenv` file which Flask uses to load it's configuration from the environment by default.
+You should be able to reach the service at: http://localhost:8080. The port that is used is controlled by an environment variable defined in the `.flaskenv` file which Flask uses to load it's configuration from the environment by default.
 
 After entering the root, you can see a json file return to you with content:
 
 ```shell
 {
-  "list_path": "http://127.0.0.1:8000/products", 
+  "list_path": "http://127.0.0.1:8080/inventory", 
   "name": "Inventory REST API Service", 
   "version": "1.0"
 }
@@ -88,14 +88,14 @@ With the service running, open a second `bash` terminal and issue the following 
 List all products:
 
 ```bash
-curl -X GET http://127.0.0.01:8000/products 
+curl -X GET http://127.0.0.1:8080/inventory 
 ```
 
 Create a product:
 
 ```bash
 curl -X POST \
-  http://127.0.0.01:8000/products \
+  http://127.0.0.1:8080/inventory \
   -H 'content-type: application/json' \
   -d '{"name":"apple", "quantity":2, "status":"NEW"}'
 ```
@@ -104,14 +104,14 @@ Read a product(hint: change the <product_id> into a real id number):
 
 ```bash
 curl -X GET \
-  http://127.0.0.01:8000/products/<product_id>
+  http://127.0.0.1:8080/inventory/<product_id>
 ```
 
 Update a product:
 
 ```bash
 curl -X PUT \
-  http://127.0.0.01:8000/products/<product_id> \
+  http://127.0.0.1:8080/inventory/<product_id> \
   -H 'content-type: application/json' \
   -d '{"name":"Green apple", "quantity":2, "status":"NEW"}'
 ```
@@ -119,7 +119,7 @@ curl -X PUT \
 Delete a product:
 
 ```bash
-curl -X DELETE http://127.0.0.01:8000/products/<product_id>
+curl -X DELETE http://127.0.0.1:8080/inventory/<product_id>
 ```
 
 ## Bring down the development environment

@@ -43,7 +43,7 @@ def index():
 api = Api(app,
           version='1.0.0',
           title='Inventory REST API Service',
-          description='This is an inventory.',
+          description='This is the inventory server.',
           default='products',
           default_label='Inventory operations',
           doc='/apidocs', # default also could use doc='/apidocs/'
