@@ -95,12 +95,11 @@ product_args = reqparse.RequestParser()
 # product_args.add_argument('product_id', type=str, required=False, help='List Products by id')
 product_args.add_argument('product_name', type=str, required=False, help='List Product by name')
 product_args.add_argument('condition', type=str, required=False, help='List Products by condition')
-product_args.add_argument('value', type=str, required=False, help='Doing action on quantity')
 
 
-# quantity_args = reqparse.RequestParser()
-# quantity_args.add_argument('condition', type=str, required=True, help='List Products by condition')
-# quantity_args.add_argument('value', type=str, required=True, help='Doing action on quantity')
+quantity_args = reqparse.RequestParser()
+quantity_args.add_argument('condition', type=str, required=True, help='List Products by condition')
+quantity_args.add_argument('value', type=str, required=True, help='Doing action on quantity')
 
 ######################################################################
 # Special Error Handlers
@@ -293,7 +292,7 @@ class IncreaseResource(Resource):
     @api.doc('increase_products')
     @api.response(400, 'The posted Product data was not valid')
     @api.response(404, 'Product not found')
-    @api.expect(product_args, validate=True)
+    @api.expect(quantity_args, validate=True)
     def put(self, product_id):
         """increase a product's inventory by a certain value"""
         app.logger.info('Request to increase a product\'s inventory by a certain value with id: %s', product_id)
@@ -330,7 +329,7 @@ class DecreaseResource(Resource):
     @api.response(400, 'The posted Product data was not valid')
     @api.response(403, 'Inventory decreased to negative prohibited.') 
     @api.response(404, 'Product not found')   
-    @api.expect(product_args, validate=True)
+    @api.expect(quantity_args, validate=True)
     def put(self, product_id):
         """decrease a product's inventory by a certain value"""
         app.logger.info('Request to decrease a product\'s inventory by a certain value with id: %s', product_id)
@@ -365,7 +364,7 @@ class UpdateResource(Resource):
     @api.doc('update_products')
     @api.response(400, 'The posted Product data was not valid')
     @api.response(404, 'Product not found')
-    @api.expect(product_args, validate=True)
+    @api.expect(quantity_args, validate=True)
     def put(self,product_id):
         """update a product's inventory by a certain value"""
         app.logger.info('Request to update a product\'s inventory with a certain value with id: %s', product_id)
