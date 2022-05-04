@@ -3,13 +3,12 @@
 applications:
 - name: nyu-inventory-service-sp2203
   path: .
-  instances: 2
+  instances: 1
   memory: 128M
   hostname: nyu-inventory-service-sp2203
   domain: us-south.cf.appdomain.cloud
   disk_quota: 1024M
-  buildpacks: 
-  - python_buildpack
+  buildpack: python_buildpack
   timeout: 180
   services:
   - ElephantSQL
