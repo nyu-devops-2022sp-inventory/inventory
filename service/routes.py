@@ -95,7 +95,7 @@ product_args = reqparse.RequestParser()
 # product_args.add_argument('product_id', type=str, required=False, help='List Products by id')
 product_args.add_argument('product_name', type=str, required=False, help='List Product by name')
 product_args.add_argument('condition', type=str, required=False, help='List Products by condition')
-quantity_args.add_argument('value', type=str, required=True, help='Doing action on quantity')
+product_args.add_argument('value', type=str, required=True, help='Doing action on quantity')
 
 quantity_args = reqparse.RequestParser()
 quantity_args.add_argument('condition', type=str, required=True, help='List Products by condition')
