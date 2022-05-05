@@ -139,14 +139,18 @@ class TestProductServer(TestCase):
         """Query Products by non-exist condition"""
         products = self._create_products(3)
         test_condition = "NEWOLD"
-        try:
-            resp = self.app.get(
+        resp = self.app.get(
                 BASE_URL, query_string="condition={}".format(quote_plus(test_condition))
             )
-        except:
-            print("successful")
-            return
-        self.assertFalse(True)
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     resp = self.app.get(
+        #         BASE_URL, query_string="condition={}".format(quote_plus(test_condition))
+        #     )
+        # except:
+        #     print("successful")
+        #     return
+        # self.assertFalse(True)
 
     def test_query_product_list_by_name_and_condition(self):
         """Query Products by name and condition"""
@@ -376,7 +380,7 @@ class TestProductServer(TestCase):
         test_condition = test_product.condition.name
         test_value = Faker("first_name")
         resp = self.app.put(
-            "/inventory/{}/inc".format(test_id),
+            "/inventory/{}/update".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
@@ -388,7 +392,7 @@ class TestProductServer(TestCase):
         test_id = test_product.product_id
         test_value = FuzzyInteger(0, 20000).fuzz()
         resp = self.app.put(
-            "/inventory/{}/inc".format(test_id),
+            "/inventory/{}/update".format(test_id),
             query_string="condition=&value={}".format(test_value)
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
@@ -400,7 +404,7 @@ class TestProductServer(TestCase):
         test_condition = test_product.condition.name
         test_value = FuzzyInteger(0, 20000).fuzz()
         resp = self.app.put(
-            "/inventory/{}/inc".format(test_id),
+            "/inventory/{}/update".format(test_id),
             query_string="condition={}&value={}".format(quote_plus(test_condition), test_value)
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

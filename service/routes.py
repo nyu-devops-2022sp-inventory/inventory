@@ -43,7 +43,7 @@ def index():
 api = Api(app,
           version='1.0.0',
           title='Inventory REST API Service',
-          description='This is an inventory.',
+          description='This is the inventory server.',
           default='products',
           default_label='Inventory operations',
           doc='/apidocs', # default also could use doc='/apidocs/'
@@ -93,14 +93,19 @@ product_model = api.inherit(
 # query string arguments
 product_args = reqparse.RequestParser()
 # product_args.add_argument('product_id', type=str, required=False, help='List Products by id')
-product_args.add_argument('product_name', type=str, required=False, help='List Product by name')
+# product_args.add_argument('product_name', type=str, required=False, help='List Product by name')
 product_args.add_argument('condition', type=str, required=False, help='List Products by condition')
-product_args.add_argument('value', type=str, required=False, help='Doing action on quantity')
+product_args.add_argument('value', type=int, required=False, help='Doing action on quantity')
+product_args.add_argument('product_name', type=str, required=False, help='List Product by name')
 
 
-# quantity_args = reqparse.RequestParser()
-# quantity_args.add_argument('condition', type=str, required=True, help='List Products by condition')
-# quantity_args.add_argument('value', type=str, required=True, help='Doing action on quantity')
+get_args = reqparse.RequestParser()
+get_args.add_argument('product_name', type=str, required=False, help='List Product by name')
+get_args.add_argument('condition', type=str, required=False, help='List Products by condition')
+
+retrieve_args = reqparse.RequestParser()
+retrieve_args.add_argument('condition', type=str, required=False, help='List Products by condition')
+# quantity_args.add_argument('value', type=int, required=True, help='Doing action on quantity')
 
 ######################################################################
 # Special Error Handlers
@@ -129,9 +134,9 @@ class ProductResource(Resource):
     """
     ProductResource class
     Allows the manipulation of a single Product
-    GET /{product_id} - Returns a Product with the id
-    PUT /pet{id} - Update a Product with the id
-    DELETE /pet{id} -  Deletes a Product with the id
+    GET /inventory/{product_id} - Returns a Product with the id
+    PUT /inventory/{product_id} - Update a Product with the id
+    DELETE /inventory/{product_id} -  Deletes a Product with the id
     """
     #------------------------------------------------------------------
     # RETRIEVE A PRODUCT & SEARCH PRODUCT(S)
@@ -139,7 +144,7 @@ class ProductResource(Resource):
     @api.doc('get_products')
     @api.response(404, 'Product not found')
     @api.marshal_with(product_model)
-    @api.expect(product_args, validate=True)
+    @api.expect(retrieve_args, validate=True)
     def get(self, product_id):
         """
         Retrieve Product
@@ -166,6 +171,8 @@ class ProductResource(Resource):
             app.logger.info("Returning product with id: %s", product_id)
         else:
             app.logger.info("Request for product with id: %s and condition: %s", product_id, condition)
+            if condition not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
             product = Product.find_by_id_and_condition(product_id, condition)
             if not product:
                 abort(status.HTTP_404_NOT_FOUND, "Product with id '{}' was not found.".format(product_id))
@@ -190,6 +197,8 @@ class ProductResource(Resource):
 
         app.logger.info('Request to update Product with id: %s and condition: %s', product_id, condition)
         check_content_type("application/json")
+        if condition not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+            abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, condition)
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
@@ -235,7 +244,7 @@ class ProductCollection(Resource):
     # LIST ALL PRODUCTS (ALL or with query parameters)
     #------------------------------------------------------------------
     @api.doc('list_products')
-    @api.expect(product_args, validate=True)
+    @api.expect(get_args, validate=True)
     @api.marshal_list_with(product_model)
     def get(self):
         """Returns all of the eligible Products"""
@@ -245,10 +254,14 @@ class ProductCollection(Resource):
         if not args["product_name"] and not args["condition"]:
             products = Product.all()
         elif args["product_name"] and args["condition"]:
+            if args["condition"] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
             products = Product.find_by_name_and_condition(args["product_name"], args["condition"])
         elif args["product_name"]:
             products = Product.find_by_name(args["product_name"])
         elif args["condition"]:
+            if args["condition"] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
             products = Product.find_by_condition(args["condition"])
 
         
@@ -302,12 +315,15 @@ class IncreaseResource(Resource):
         # value = args.get("value")
         if not args['condition'] or not args['value']:
             abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
-        try:
-            value_int = int(args['value'])
-        except ValueError:
-            abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
+        value_int = int(args['value'])
+        # try:
+        #     value_int = int(args['value'])
+        # except ValueError:
+        #     abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
         if value_int < 0:
             abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
+        if args['condition'] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+            abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, args['condition'])
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, args['condition']))
@@ -339,12 +355,15 @@ class DecreaseResource(Resource):
         value = args.get("value")
         if not condition or not value:
             abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
-        try:
-            value_int = int(value)
-        except ValueError:
-            abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
+        value_int = int(value)
+        # try:
+        #     value_int = int(value)
+        # except ValueError:
+        #     abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
         if value_int < 0:
             abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
+        if condition not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+            abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, condition)
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, condition))
@@ -374,12 +393,15 @@ class UpdateResource(Resource):
         # value = args.get("value")
         if not args['condition'] or not args['value']:
             abort(status.HTTP_400_BAD_REQUEST, "Value 'condition' and 'value' should be provided")
-        try:
-            value_int = int(args['value'])
-        except ValueError:
-            abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
+        value_int = int(args['value'])
+        # try:
+        #     value_int = int(args['value'])
+        # except ValueError:
+        #     abort(status.HTTP_400_BAD_REQUEST, "'value' not an integer")
         if value_int < 0:
             abort(status.HTTP_400_BAD_REQUEST, "'value' should be non-negative")
+        if args['condition'] not in ['NEW', 'OPEN_BOX', 'USED', 'UNKNOWN']:
+                abort(status.HTTP_400_BAD_REQUEST, "'condition' not valid")
         product = Product.find_by_id_and_condition(product_id, args['condition'])
         if not product:
             abort(status.HTTP_404_NOT_FOUND, "Product {} with condition {} was not found".format(product_id, args['condition']))

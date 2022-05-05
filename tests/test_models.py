@@ -183,6 +183,22 @@ class TestProductModel(unittest.TestCase):
         data = "this is not a dictionary"
         product = Product()
         self.assertRaises(DataValidationError, product.deserialize, data)
+
+    def test_deserialize_invalid_condition(self):
+        """Test deserialization of invalid condition"""
+        data = {
+            "id": 1,
+            "product_id": 10005,
+            "product_name": "Apples",
+            "quantity": 5,
+            "condition": "randonstuff",
+            "restock_level": 5,
+            "reorder_amount": 5,
+        }
+        product = Product()
+        self.assertRaises(DataValidationError, product.deserialize, data)
+
+
     def test_find(self):
         """Find by id"""
         products = ProductFactory.create_batch(3)
