@@ -101,10 +101,10 @@ product_args.add_argument('product_name', type=str, required=False, help='List P
 
 get_args = reqparse.RequestParser()
 get_args.add_argument('product_name', type=str, required=False, help='List Product by name')
-get_args.add_argument('condition', type=str, required=True, help='List Products by condition')
+get_args.add_argument('condition', type=str, required=False, help='List Products by condition')
 
 retrieve_args = reqparse.RequestParser()
-retrieve_args.add_argument('condition', type=str, required=True, help='List Products by condition')
+retrieve_args.add_argument('condition', type=str, required=False, help='List Products by condition')
 # quantity_args.add_argument('value', type=int, required=True, help='Doing action on quantity')
 
 ######################################################################
